@@ -77,9 +77,21 @@ export const useUserSession = (): UserSessionState & UserSessionActions => {
         localStorage.setItem('fixfy_session_id', currentSessionId);
       }
 
-      // Get or create user
-      const userData = await getOrCreateUser(currentSessionId);
-      setUser(userData);
+      // Try to get or create user (optional - works without DB)
+      try {
+        const userData = await getOrCreateUser(currentSessionId);
+        setUser(userData);
+        console.log('User session initialized:', userData.id);
+      } catch (dbError) {
+        console.warn('Database connection failed, continuing without persistence:', dbError);
+        // Create a mock user for offline functionality
+        setUser({
+          id: 'offline-user',
+          session_id: currentSessionId,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to initialize session';
       setError(errorMessage);
@@ -109,6 +121,10 @@ export const useUserSession = (): UserSessionState & UserSessionActions => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to save image';
       setError(errorMessage);
+      // If it's a database connection error, throw a specific error
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+        throw new Error('Database connection failed');
+      }
       throw err;
     }
   }, [user]);

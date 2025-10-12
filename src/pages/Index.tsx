@@ -368,16 +368,18 @@ const Index = () => {
               />
             )}
             
-            {/* Image History - User's uploaded images */}
-            <ImageHistory 
-              onImageSelect={(imageUrl, analysisData) => {
-                setUploadedImage(imageUrl);
-                if (analysisData) {
-                  setDetectedObjects(analysisData.detected_objects as any[] || []);
-                  // You could also load previous suggestions here
-                }
-              }}
-            />
+            {/* Image History - User's uploaded images (only show if database is available) */}
+            {user && user.id !== 'offline-user' && (
+              <ImageHistory 
+                onImageSelect={(imageUrl, analysisData) => {
+                  setUploadedImage(imageUrl);
+                  if (analysisData) {
+                    setDetectedObjects(analysisData.detected_objects as any[] || []);
+                    // You could also load previous suggestions here
+                  }
+                }}
+              />
+            )}
           </div>
         </div>
       </section>

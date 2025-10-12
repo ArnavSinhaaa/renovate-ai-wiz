@@ -88,7 +88,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       console.log('Analysis complete:', data);
       const detectedObjects = data.detectedObjects || [];
       
-      // Save analysis results to database if we have an image ID
+      // Save analysis results to database if we have an image ID (optional)
       if (currentImageId) {
         try {
           const analysisResult = await saveAnalysis({
@@ -104,10 +104,9 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             await saveSuggestions(data.suggestions, analysisResult.id);
           }
           
-          toast.success('Analysis saved to your history!');
+          console.log('Analysis saved to database:', analysisResult.id);
         } catch (dbError) {
-          console.error('Failed to save analysis to database:', dbError);
-          toast.error('Analysis completed but failed to save to history');
+          console.warn('Failed to save analysis to database (continuing without persistence):', dbError);
         }
       }
       
@@ -140,22 +139,27 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       const imageUrl = URL.createObjectURL(file);
       onImageUpload(file);
 
-      // Save image to database
-      const savedImage = await saveImage({
-        imageUrl,
-        imageName: file.name,
-        imageSize: file.size,
-        imageType: file.type,
-      });
-
-      toast.success('Image uploaded successfully!');
+      // Try to save image to database (optional - works without DB)
+      try {
+        const savedImage = await saveImage({
+          imageUrl,
+          imageName: file.name,
+          imageSize: file.size,
+          imageType: file.type,
+        });
+        console.log('Image saved to database:', savedImage.id);
+        toast.success('Image uploaded and saved successfully!');
+      } catch (dbError) {
+        console.warn('Database save failed, continuing without persistence:', dbError);
+        toast.success('Image uploaded successfully! (Not saved to history)');
+      }
       
       // Start analysis
       await analyzeImage(file);
     } catch (error) {
       console.error('Failed to handle file:', error);
       toast.error('Failed to upload image. Please try again.');
-      onRemoveImage(); // Remove the image from UI if database save failed
+      onRemoveImage(); // Remove the image from UI if upload failed
     }
   };
 
