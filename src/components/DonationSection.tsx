@@ -14,7 +14,7 @@ interface DonationSectionProps {
 }
 
 export const DonationSection: React.FC<DonationSectionProps> = ({
-  upiId = 'yourname@upi',
+  upiId = '9430253372@fam',
   buyMeACoffeeUrl = 'https://www.buymeacoffee.com/yourid',
   paypalUrl,
   razorpayUrl,
