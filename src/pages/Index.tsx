@@ -17,6 +17,7 @@ import { ObjectDetection } from '@/components/ObjectDetection';
 import { RenovationSuggestionCard } from '@/components/RenovationSuggestionCard';
 import { BudgetPlanner } from '@/components/BudgetPlanner';
 import { RenovationPreview } from '@/components/RenovationPreview';
+import { DonationSection } from '@/components/DonationSection';
 import { AdPlacement } from '@/components/AdPlacement';
 import { FixfyLogo } from '@/components/FixfyLogo';
 import { ImageHistory } from '@/components/ImageHistory';
@@ -358,15 +359,13 @@ const Index = () => {
               onRemoveItem={handleRemoveItem} 
             />
             
-            {/* AI Renovation Preview - Visual preview of selected changes */}
-            {cartItems.length > 0 && (
-              <RenovationPreview 
-                selectedSuggestions={cartItems} 
-                roomType={selectedRoom === 'all' ? undefined : selectedRoom} 
-                budget={budget} 
-                uploadedImage={uploadedImage} 
-              />
-            )}
+            {/* AI Renovation Preview - always available for easier experimentation */}
+            <RenovationPreview 
+              selectedSuggestions={cartItems} 
+              roomType={selectedRoom === 'all' ? undefined : selectedRoom} 
+              budget={budget} 
+              uploadedImage={uploadedImage} 
+            />
             
             {/* Image History - User's uploaded images (only show if database is available) */}
             {user && user.id !== 'offline-user' && (
@@ -389,6 +388,14 @@ const Index = () => {
         position="footer" 
         adType="adsense"
       />
+
+      {/* Donation Section */}
+      <section className="container mx-auto px-4 py-8">
+        <DonationSection 
+          upiId="yourname@upi"
+          buyMeACoffeeUrl="https://www.buymeacoffee.com/yourid"
+        />
+      </section>
 
       {/* Footer with attribution and copyright */}
       <footer className="border-t bg-card/50 backdrop-blur-sm mt-16">

@@ -268,6 +268,8 @@ export const WallColorCustomizer: React.FC<WallColorCustomizerProps> = ({
   const [selectedWall, setSelectedWall] = useState<WallSide>('front');
   const [customColor, setCustomColor] = useState('#FFFFFF');
   const [savedSchemes, setSavedSchemes] = useState<{ room: string; colors: WallColors }[]>([]);
+  const [customFlooring, setCustomFlooring] = useState({ name: '', type: '' });
+  const [customTile, setCustomTile] = useState({ name: '', type: '' });
 
   const currentWallColor = wallColors[selectedWall];
   
@@ -616,6 +618,36 @@ export const WallColorCustomizer: React.FC<WallColorCustomizerProps> = ({
                   </button>
                 ))}
               </div>
+              {/* Custom flooring entry */}
+              <div className="mt-4 p-3 border rounded-lg bg-muted/40">
+                <p className="text-sm font-medium mb-2">Add your own flooring:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <input 
+                    className="px-3 py-2 border rounded text-sm"
+                    placeholder="Name (e.g., Teak Herringbone)"
+                    value={customFlooring.name}
+                    onChange={(e) => setCustomFlooring({ ...customFlooring, name: e.target.value })}
+                  />
+                  <input 
+                    className="px-3 py-2 border rounded text-sm"
+                    placeholder="Type (wood/laminate/vinyl...)"
+                    value={customFlooring.type}
+                    onChange={(e) => setCustomFlooring({ ...customFlooring, type: e.target.value })}
+                  />
+                </div>
+                <div className="mt-2">
+                  <Button 
+                    size="sm" 
+                    onClick={() => {
+                      if (!customFlooring.name || !customFlooring.type) return;
+                      onFlooringChange({ type: customFlooring.type, name: customFlooring.name });
+                      toast.success(`${customFlooring.name} selected`);
+                    }}
+                  >
+                    Use this flooring
+                  </Button>
+                </div>
+              </div>
             </div>
           </TabsContent>
 
@@ -674,6 +706,36 @@ export const WallColorCustomizer: React.FC<WallColorCustomizerProps> = ({
                     </div>
                   </button>
                 ))}
+              </div>
+              {/* Custom tile entry */}
+              <div className="mt-4 p-3 border rounded-lg bg-muted/40">
+                <p className="text-sm font-medium mb-2">Add your own tile:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <input 
+                    className="px-3 py-2 border rounded text-sm"
+                    placeholder="Name (e.g., Terrazzo)"
+                    value={customTile.name}
+                    onChange={(e) => setCustomTile({ ...customTile, name: e.target.value })}
+                  />
+                  <input 
+                    className="px-3 py-2 border rounded text-sm"
+                    placeholder="Type (porcelain/ceramic/mosaic...)"
+                    value={customTile.type}
+                    onChange={(e) => setCustomTile({ ...customTile, type: e.target.value })}
+                  />
+                </div>
+                <div className="mt-2">
+                  <Button 
+                    size="sm" 
+                    onClick={() => {
+                      if (!customTile.name || !customTile.type) return;
+                      onTileChange({ type: customTile.type, name: customTile.name });
+                      toast.success(`${customTile.name} selected`);
+                    }}
+                  >
+                    Use this tile
+                  </Button>
+                </div>
               </div>
             </div>
           </TabsContent>
