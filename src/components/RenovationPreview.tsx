@@ -37,11 +37,6 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
   };
 
   const generateRenovationImage = async () => {
-    if (selectedSuggestions.length === 0) {
-      alert('Please add some renovation suggestions to your cart first');
-      return;
-    }
-
     if (!uploadedImage) {
       alert('Please upload a room photo first');
       return;
@@ -70,7 +65,7 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
       
       const prompt = suggestions.length > 0 
         ? `Apply these renovations: ${suggestions.join(', ')}`
-        : 'Upgrade the room with modern improvements';
+        : 'Upgrade the room with modern improvements. Focus on wall paint and flooring/tile customization as specified.';
       
       console.log('Editing room photo for lighting renovation...');
       
@@ -168,7 +163,7 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
               )}
               <Button 
                 onClick={generateRenovationImage}
-                disabled={isGenerating || selectedSuggestions.length === 0}
+                disabled={isGenerating}
                 className="w-full"
                 variant="default"
               >

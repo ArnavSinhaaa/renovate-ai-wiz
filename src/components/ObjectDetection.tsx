@@ -228,3 +228,5 @@ export const ObjectDetection: React.FC<ObjectDetectionProps> = ({
     </Card>
   );
 };
+
+export default ObjectDetection;
