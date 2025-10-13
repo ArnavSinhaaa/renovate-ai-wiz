@@ -392,8 +392,8 @@ const Index = () => {
       {/* Donation Section */}
       <section className="container mx-auto px-4 py-8">
         <DonationSection 
-          upiId="yourname@upi"
-          buyMeACoffeeUrl="https://www.buymeacoffee.com/yourid"
+          upiId="9430253372@fam"
+          buyMeACoffeeUrl="buymeacoffee.com/arnavsinhav"
         />
       </section>
 
