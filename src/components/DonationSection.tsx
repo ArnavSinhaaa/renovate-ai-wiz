@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Coffee, Copy, ExternalLink } from 'lucide-react';
+import { Coffee, Copy, ExternalLink, Twitter, Instagram, Facebook, Linkedin, Github, Youtube } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DonationSectionProps {
@@ -11,6 +11,16 @@ interface DonationSectionProps {
   paypalUrl?: string;
   razorpayUrl?: string;
   upiQrSrc?: string; // defaults to /upi-qr.jpg in public
+
+  // Social media handles
+  twitterUrl?: string;
+  instagramUrl?: string;
+  facebookUrl?: string;
+  linkedInUrl?: string;
+  githubUrl?: string;
+  youtubeUrl?: string;
+  tiktokUrl?: string;
+  // Add more as needed!
 }
 
 export const DonationSection: React.FC<DonationSectionProps> = ({
@@ -19,6 +29,13 @@ export const DonationSection: React.FC<DonationSectionProps> = ({
   paypalUrl,
   razorpayUrl,
   upiQrSrc = '/upi-qr.jpg',
+  twitterUrl,
+  instagramUrl,
+  facebookUrl,
+  linkedInUrl,
+  githubUrl,
+  youtubeUrl,
+  tiktokUrl,
 }) => {
   const copyUpi = async () => {
     try {
@@ -56,12 +73,14 @@ export const DonationSection: React.FC<DonationSectionProps> = ({
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">Prefer other options?</p>
           <div className="grid gap-2">
-            <a href={buyMeACoffeeUrl} target="_blank" rel="noreferrer">
-              <Button className="w-full">
-                <Coffee className="w-4 h-4 mr-2" /> Buy Me a Coffee
-                <ExternalLink className="w-4 h-4 ml-2 opacity-75" />
-              </Button>
-            </a>
+            {buyMeACoffeeUrl && (
+              <a href={buyMeACoffeeUrl} target="_blank" rel="noreferrer">
+                <Button className="w-full">
+                  <Coffee className="w-4 h-4 mr-2" /> Buy Me a Coffee
+                  <ExternalLink className="w-4 h-4 ml-2 opacity-75" />
+                </Button>
+              </a>
+            )}
             {razorpayUrl && (
               <a href={razorpayUrl} target="_blank" rel="noreferrer">
                 <Button variant="outline" className="w-full">
@@ -79,13 +98,62 @@ export const DonationSection: React.FC<DonationSectionProps> = ({
               </a>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">Your support helps keep development active. Thank you!</p>
+          {/* Social Media Section */}
+          <p className="text-sm text-muted-foreground mt-6">Connect on social media:</p>
+          <div className="grid gap-2">
+            {twitterUrl && (
+              <a href={twitterUrl} target="_blank" rel="noreferrer">
+                <Button variant="outline" className="w-full">
+                  <Twitter className="w-4 h-4 mr-2 text-[#1DA1F2]" /> Twitter
+                </Button>
+              </a>
+            )}
+            {instagramUrl && (
+              <a href={instagramUrl} target="_blank" rel="noreferrer">
+                <Button variant="outline" className="w-full">
+                  <Instagram className="w-4 h-4 mr-2 text-[#E4405F]" /> Instagram
+                </Button>
+              </a>
+            )}
+            {facebookUrl && (
+              <a href={facebookUrl} target="_blank" rel="noreferrer">
+                <Button variant="outline" className="w-full">
+                  <Facebook className="w-4 h-4 mr-2 text-[#1877F3]" /> Facebook
+                </Button>
+              </a>
+            )}
+            {linkedInUrl && (
+              <a href={linkedInUrl} target="_blank" rel="noreferrer">
+                <Button variant="outline" className="w-full">
+                  <Linkedin className="w-4 h-4 mr-2 text-[#0077B5]" /> LinkedIn
+                </Button>
+              </a>
+            )}
+            {githubUrl && (
+              <a href={githubUrl} target="_blank" rel="noreferrer">
+                <Button variant="outline" className="w-full">
+                  <Github className="w-4 h-4 mr-2 text-black" /> GitHub
+                </Button>
+              </a>
+            )}
+            {youtubeUrl && (
+              <a href={youtubeUrl} target="_blank" rel="noreferrer">
+                <Button variant="outline" className="w-full">
+                  <Youtube className="w-4 h-4 mr-2 text-[#FF0000]" /> YouTube
+                </Button>
+              </a>
+            )}
+            {tiktokUrl && (
+              <a href={tiktokUrl} target="_blank" rel="noreferrer">
+                <Button variant="outline" className="w-full">
+                  {/* Replace with TikTok icon if available */}
+                  TikTok
+                </Button>
+              </a>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
   );
 };
-
-export default DonationSection;
-
-
