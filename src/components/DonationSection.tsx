@@ -30,7 +30,7 @@ export const DonationSection: React.FC<DonationSectionProps> = ({
   razorpayUrl,
   upiQrSrc = '/upi-qr.jpg',
   twitterUrl,
-  instagramUrl,
+  instagramUrl= "https://www.instagram.com/thefixfy/",
   facebookUrl,
   linkedInUrl,
   githubUrl,
