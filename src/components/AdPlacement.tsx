@@ -27,8 +27,8 @@ interface AdPlacementProps {
 export const AdPlacement: React.FC<AdPlacementProps> = ({
   position,
   adType = 'adsense',
-  mobileVisible = true,
-  desktopVisible = true,
+  mobileVisible = false,
+  desktopVisible = false,
   adContent
 }) => {
   // Responsive visibility classes
