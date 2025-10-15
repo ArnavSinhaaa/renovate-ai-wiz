@@ -67,7 +67,7 @@ export const DonationSection: React.FC<DonationSectionProps> = ({
               Copy UPI
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">Place your QR image at public/upi-qr.jpg or pass a custom upiQrSrc prop.</p>
+          
         </div>
 
         <div className="space-y-3">
