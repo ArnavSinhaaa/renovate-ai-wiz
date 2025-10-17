@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Palette, Save, Share2, Copy, RotateCcw, Square, Layers } from 'lucide-react';
+import { Palette, Save, Share2, Copy, RotateCcw, Square, Layers, DollarSign } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,6 +42,14 @@ export interface FlooringOption {
   type: string;
   name: string;
   imageUrl?: string;
+  cost?: number;
+}
+
+export interface MaterialCosts {
+  walls: number;
+  flooring: number;
+  tiles: number;
+  total: number;
 }
 
 interface WallColorCustomizerProps {
@@ -52,36 +60,38 @@ interface WallColorCustomizerProps {
   flooring: FlooringOption;
   onTileChange: (tile: FlooringOption) => void;
   tile: FlooringOption;
+  onMaterialCostsChange?: (costs: MaterialCosts) => void;
+  roomSize?: number; // in square meters
 }
 
 const FLOORING_OPTIONS: FlooringOption[] = [
-  { type: 'wood', name: 'Oak Hardwood' },
-  { type: 'wood', name: 'Walnut Engineered' },
-  { type: 'wood', name: 'Bamboo Flooring' },
-  { type: 'laminate', name: 'Light Laminate' },
-  { type: 'laminate', name: 'Dark Laminate' },
-  { type: 'vinyl', name: 'Luxury Vinyl Plank' },
-  { type: 'vinyl', name: 'Stone-look Vinyl' },
-  { type: 'tile', name: 'Porcelain Tile' },
-  { type: 'tile', name: 'Ceramic Tile' },
-  { type: 'marble', name: 'White Marble' },
-  { type: 'marble', name: 'Black Marble' },
-  { type: 'granite', name: 'Granite Tile' },
+  { type: 'wood', name: 'Oak Hardwood', cost: 450 },
+  { type: 'wood', name: 'Walnut Engineered', cost: 550 },
+  { type: 'wood', name: 'Bamboo Flooring', cost: 380 },
+  { type: 'laminate', name: 'Light Laminate', cost: 180 },
+  { type: 'laminate', name: 'Dark Laminate', cost: 200 },
+  { type: 'vinyl', name: 'Luxury Vinyl Plank', cost: 280 },
+  { type: 'vinyl', name: 'Stone-look Vinyl', cost: 320 },
+  { type: 'tile', name: 'Porcelain Tile', cost: 350 },
+  { type: 'tile', name: 'Ceramic Tile', cost: 300 },
+  { type: 'marble', name: 'White Marble', cost: 800 },
+  { type: 'marble', name: 'Black Marble', cost: 850 },
+  { type: 'granite', name: 'Granite Tile', cost: 650 },
 ];
 
 const TILE_OPTIONS: FlooringOption[] = [
-  { type: 'ceramic', name: 'White Ceramic Tile' },
-  { type: 'ceramic', name: 'Beige Ceramic Tile' },
-  { type: 'ceramic', name: 'Gray Ceramic Tile' },
-  { type: 'porcelain', name: 'Polished Porcelain' },
-  { type: 'porcelain', name: 'Matte Porcelain' },
-  { type: 'mosaic', name: 'Glass Mosaic' },
-  { type: 'mosaic', name: 'Stone Mosaic' },
-  { type: 'subway', name: 'White Subway Tile' },
-  { type: 'subway', name: 'Colored Subway Tile' },
-  { type: 'marble', name: 'Marble Tile' },
-  { type: 'granite', name: 'Granite Tile' },
-  { type: 'natural', name: 'Natural Stone' },
+  { type: 'ceramic', name: 'White Ceramic Tile', cost: 120 },
+  { type: 'ceramic', name: 'Beige Ceramic Tile', cost: 130 },
+  { type: 'ceramic', name: 'Gray Ceramic Tile', cost: 135 },
+  { type: 'porcelain', name: 'Polished Porcelain', cost: 200 },
+  { type: 'porcelain', name: 'Matte Porcelain', cost: 180 },
+  { type: 'mosaic', name: 'Glass Mosaic', cost: 450 },
+  { type: 'mosaic', name: 'Stone Mosaic', cost: 380 },
+  { type: 'subway', name: 'White Subway Tile', cost: 150 },
+  { type: 'subway', name: 'Colored Subway Tile', cost: 170 },
+  { type: 'marble', name: 'Marble Tile', cost: 550 },
+  { type: 'granite', name: 'Granite Tile', cost: 420 },
+  { type: 'natural', name: 'Natural Stone', cost: 480 },
 ];
 
 // Helper function to get visual pattern for flooring
@@ -264,12 +274,37 @@ export const WallColorCustomizer: React.FC<WallColorCustomizerProps> = ({
   flooring,
   onTileChange,
   tile,
+  onMaterialCostsChange,
+  roomSize = 20, // default 20 sq meters
 }) => {
   const [selectedWall, setSelectedWall] = useState<WallSide>('front');
   const [customColor, setCustomColor] = useState('#FFFFFF');
   const [savedSchemes, setSavedSchemes] = useState<{ room: string; colors: WallColors }[]>([]);
   const [customFlooring, setCustomFlooring] = useState({ name: '', type: '' });
   const [customTile, setCustomTile] = useState({ name: '', type: '' });
+
+  // Calculate costs based on room size
+  const WALL_PAINT_COST_PER_SQM = 80; // ₹80 per sq meter for walls
+  const wallArea = roomSize * 2.5; // Approximate wall area (assuming 2.5x room size)
+  const floorArea = roomSize;
+  
+  // Calculate total costs
+  const wallPaintCost = wallArea * WALL_PAINT_COST_PER_SQM;
+  const flooringCost = (flooring.cost || 0) * floorArea;
+  const tileCost = (tile.cost || 0) * (floorArea * 0.3); // Assuming tiles cover 30% of area (bathroom/kitchen)
+  const totalMaterialCost = wallPaintCost + flooringCost + tileCost;
+
+  // Update parent component with costs whenever they change
+  React.useEffect(() => {
+    if (onMaterialCostsChange) {
+      onMaterialCostsChange({
+        walls: wallPaintCost,
+        flooring: flooringCost,
+        tiles: tileCost,
+        total: totalMaterialCost,
+      });
+    }
+  }, [wallPaintCost, flooringCost, tileCost, totalMaterialCost, onMaterialCostsChange]);
 
   const currentWallColor = wallColors[selectedWall];
   
@@ -365,6 +400,37 @@ export const WallColorCustomizer: React.FC<WallColorCustomizerProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Material Cost Summary */}
+        <div className="p-4 border rounded-lg bg-gradient-to-br from-primary/5 to-secondary/5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold flex items-center gap-2">
+              <DollarSign className="w-4 h-4" />
+              Material Costs
+            </h3>
+            <Badge variant="outline" className="font-mono">
+              ₹{totalMaterialCost.toLocaleString()}
+            </Badge>
+          </div>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Wall Paint ({wallArea.toFixed(1)} sq m)</span>
+              <span className="font-medium">₹{wallPaintCost.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Flooring ({floorArea} sq m)</span>
+              <span className="font-medium">₹{flooringCost.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Tiles ({(floorArea * 0.3).toFixed(1)} sq m)</span>
+              <span className="font-medium">₹{tileCost.toLocaleString()}</span>
+            </div>
+            <div className="pt-2 border-t flex justify-between items-center">
+              <span className="font-semibold">Total Materials</span>
+              <span className="font-bold text-primary">₹{totalMaterialCost.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+
         <Tabs defaultValue="walls" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="walls">
@@ -612,7 +678,12 @@ export const WallColorCustomizer: React.FC<WallColorCustomizerProps> = ({
                       style={getFlooringPattern(option.type, option.name)}
                     />
                     <div className="p-3 bg-card text-left">
-                      <p className="font-medium text-sm mb-1">{option.name}</p>
+                      <div className="flex justify-between items-start mb-1">
+                        <p className="font-medium text-sm">{option.name}</p>
+                        <Badge variant="secondary" className="text-xs">
+                          ₹{option.cost}/m²
+                        </Badge>
+                      </div>
                       <p className="text-xs text-muted-foreground capitalize">{option.type}</p>
                     </div>
                   </button>
@@ -701,7 +772,12 @@ export const WallColorCustomizer: React.FC<WallColorCustomizerProps> = ({
                       style={getTilePattern(option.type, option.name)}
                     />
                     <div className="p-3 bg-card text-left">
-                      <p className="font-medium text-sm mb-1">{option.name}</p>
+                      <div className="flex justify-between items-start mb-1">
+                        <p className="font-medium text-sm">{option.name}</p>
+                        <Badge variant="secondary" className="text-xs">
+                          ₹{option.cost}/m²
+                        </Badge>
+                      </div>
                       <p className="text-xs text-muted-foreground capitalize">{option.type}</p>
                     </div>
                   </button>
