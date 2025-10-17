@@ -48,29 +48,33 @@ interface DetectedObject {
 const Index = () => {
   // State for uploaded image management
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  
+
   // State for AI analysis process
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [detectedObjects, setDetectedObjects] = useState<DetectedObject[]>([]);
-  
+
   // State for budget and room filtering
   const [budget, setBudget] = useState<number>(50000);
   const [selectedRoom, setSelectedRoom] = useState<string>('all');
-  
+
   // State for renovation suggestions and cart management
   const [cartItems, setCartItems] = useState<RenovationSuggestion[]>([]);
   const [filteredSuggestions, setFilteredSuggestions] = useState<RenovationSuggestion[]>([]);
   const [currentImageId, setCurrentImageId] = useState<string | null>(null);
-  
+
   // Ad management
   const adManager = useAdManager({
     enabled: true,
     maxAdsPerPage: 4,
     loadingDelay: 1500
   });
-  
+
   // User session management
-  const { user, isLoading: userLoading, error: userError } = useUserSession();
+  const {
+    user,
+    isLoading: userLoading,
+    error: userError
+  } = useUserSession();
   /**
    * Handles image upload from user
    * Creates a URL for the uploaded file and starts the analysis process
@@ -163,8 +167,7 @@ const Index = () => {
       setFilteredSuggestions(suggestions);
     }
   }, [detectedObjects, budget]);
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       {/* Header with theme toggle only */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-end">
@@ -173,20 +176,13 @@ const Index = () => {
       </header>
       
       {/* Header Ad Banner */}
-      <AdPlacement 
-        position="header" 
-        adType="adsense"
-      />
+      <AdPlacement position="header" adType="adsense" />
 
       {/* Hero Section - Main landing area with compelling visuals and messaging */}
       <section className="relative overflow-hidden min-h-[600px]">
         {/* Background image with gradient overlays for visual appeal */}
         <div className="absolute inset-0">
-          <img 
-            src={heroImage} 
-            alt="Beautiful home renovation transformation" 
-            className="w-full h-full object-cover" 
-          />
+          <img src={heroImage} alt="Beautiful home renovation transformation" className="w-full h-full object-cover" />
           {/* Primary gradient overlay for text readability */}
           <div className="absolute inset-0 bg-gradient-to-br from-purple-900/90 via-indigo-900/80 to-background/95" />
           {/* Secondary radial gradient for depth */}
@@ -240,10 +236,9 @@ const Index = () => {
         
         {/* Decorative floating elements for visual interest */}
         <div className="absolute top-20 right-10 w-32 h-32 bg-cyan-500/20 rounded-full blur-3xl animate-pulse" />
-        <div 
-          className="absolute bottom-20 left-10 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl animate-pulse" 
-          style={{ animationDelay: '1s' }} 
-        />
+        <div className="absolute bottom-20 left-10 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{
+        animationDelay: '1s'
+      }} />
       </section>
 
       {/* Main Content Section - Interactive renovation tools */}
@@ -261,14 +256,7 @@ const Index = () => {
                   {/* Budget input field */}
                   <div className="space-y-2">
                     <Label htmlFor="budget">Budget (₹)</Label>
-                    <Input 
-                      id="budget" 
-                      type="number" 
-                      value={budget} 
-                      onChange={e => handleBudgetChange(e.target.value)} 
-                      placeholder="Enter your budget" 
-                      min="0" 
-                    />
+                    <Input id="budget" type="number" value={budget} onChange={e => handleBudgetChange(e.target.value)} placeholder="Enter your budget" min="0" />
                   </div>
                   
                   {/* Room type selection dropdown */}
@@ -294,32 +282,16 @@ const Index = () => {
             </Card>
 
             {/* Image Upload Component - Handles file upload and AI analysis */}
-            <ImageUpload 
-              onImageUpload={handleImageUpload} 
-              uploadedImage={uploadedImage} 
-              onRemoveImage={handleRemoveImage} 
-              isAnalyzing={isAnalyzing} 
-              onAnalysisComplete={handleAnalysisComplete}
-              currentImageId={currentImageId || undefined}
-            />
+            <ImageUpload onImageUpload={handleImageUpload} uploadedImage={uploadedImage} onRemoveImage={handleRemoveImage} isAnalyzing={isAnalyzing} onAnalysisComplete={handleAnalysisComplete} currentImageId={currentImageId || undefined} />
 
             {/* Object Detection Results - Shows AI analysis findings */}
-            <ObjectDetection 
-              detectedObjects={detectedObjects} 
-              isAnalyzing={isAnalyzing} 
-            />
+            <ObjectDetection detectedObjects={detectedObjects} isAnalyzing={isAnalyzing} />
 
             {/* Content Ad - Between analysis and suggestions */}
-            {adManager.canShowMoreAds() && !adManager.isLoading && (
-              <AdPlacement 
-                position="content" 
-                adType="adsense"
-              />
-            )}
+            {adManager.canShowMoreAds() && !adManager.isLoading && <AdPlacement position="content" adType="adsense" />}
 
             {/* Renovation Suggestions - AI-generated recommendations */}
-            {filteredSuggestions.length > 0 && (
-              <Card className="shadow-soft">
+            {filteredSuggestions.length > 0 && <Card className="shadow-soft">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-primary" />
@@ -328,78 +300,46 @@ const Index = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid md:grid-cols-2 gap-6">
-                    {filteredSuggestions.map(suggestion => (
-                      <RenovationSuggestionCard 
-                        key={suggestion.id} 
-                        suggestion={suggestion} 
-                        onAddToCart={handleAddToCart} 
-                        isInCart={cartItems.some(item => item.id === suggestion.id)} 
-                      />
-                    ))}
+                    {filteredSuggestions.map(suggestion => <RenovationSuggestionCard key={suggestion.id} suggestion={suggestion} onAddToCart={handleAddToCart} isInCart={cartItems.some(item => item.id === suggestion.id)} />)}
                   </div>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
           </div>
 
           {/* Right Column - Budget management and preview tools */}
           <div className="space-y-8">
             {/* Sidebar Ad - Top of sidebar */}
-            {adManager.canShowMoreAds() && !adManager.isLoading && (
-              <AdPlacement 
-                position="sidebar" 
-                adType="adsense"
-              />
-            )}
+            {adManager.canShowMoreAds() && !adManager.isLoading && <AdPlacement position="sidebar" adType="adsense" />}
 
             {/* Budget Planner - Track costs and timeline */}
-            <BudgetPlanner 
-              budget={budget} 
-              cartItems={cartItems} 
-              onRemoveItem={handleRemoveItem} 
-            />
+            <BudgetPlanner budget={budget} cartItems={cartItems} onRemoveItem={handleRemoveItem} />
             
             {/* AI Renovation Preview - always available for easier experimentation */}
-            <RenovationPreview 
-              selectedSuggestions={cartItems} 
-              roomType={selectedRoom === 'all' ? undefined : selectedRoom} 
-              budget={budget} 
-              uploadedImage={uploadedImage} 
-            />
+            <RenovationPreview selectedSuggestions={cartItems} roomType={selectedRoom === 'all' ? undefined : selectedRoom} budget={budget} uploadedImage={uploadedImage} />
             
             {/* Image History - User's uploaded images (only show if database is available) */}
-            {user && user.id !== 'offline-user' && (
-              <ImageHistory 
-                onImageSelect={(imageUrl, analysisData) => {
-                  setUploadedImage(imageUrl);
-                  if (analysisData) {
-                    setDetectedObjects(analysisData.detected_objects as any[] || []);
-                    // You could also load previous suggestions here
-                  }
-                }}
-              />
-            )}
+            {user && user.id !== 'offline-user' && <ImageHistory onImageSelect={(imageUrl, analysisData) => {
+            setUploadedImage(imageUrl);
+            if (analysisData) {
+              setDetectedObjects(analysisData.detected_objects as any[] || []);
+              // You could also load previous suggestions here
+            }
+          }} />}
           </div>
         </div>
       </section>
 
       {/* Footer Ad Banner */}
-      <AdPlacement 
-        position="footer" 
-        adType="adsense"
-      />
+      <AdPlacement position="footer" adType="adsense" />
 
       {/* Donation Section */}
       <section className="container mx-auto px-4 py-8">
-        <DonationSection 
-          upiId="9430253372@fam"
-          buyMeACoffeeUrl="buymeacoffee.com/arnavsinhav"
-        />
+        <DonationSection upiId="9430253372@fam" buyMeACoffeeUrl="buymeacoffee.com/arnavsinhav" />
       </section>
 
       {/* Footer with attribution and copyright */}
       <footer className="border-t bg-card/50 backdrop-blur-sm mt-16">
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto py-8 px-[31px] my-[13px]">
           <div className="flex flex-col items-center justify-center gap-2 text-center">
             <p className="text-sm text-muted-foreground">
               Made with <span className="text-cyan-500">❤️</span> by{' '}
@@ -411,8 +351,6 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
