@@ -16,6 +16,26 @@ import NotFound from "./pages/NotFound";
 // Create a new QueryClient instance for React Query
 // This manages server state, caching, and background updates
 const queryClient = new QueryClient();
+// Add this state
+const [materialCosts, setMaterialCosts] = useState<MaterialCosts>({
+  walls: 0,
+  flooring: 0,
+  tiles: 0,
+  total: 0,
+});
+
+// Add these props to WallColorCustomizer
+<WallColorCustomizer
+  // ... your existing props
+  onMaterialCostsChange={setMaterialCosts}  // ✅ NEW
+  roomSize={20}  // ✅ NEW (adjust based on your room)
+/>
+
+// Add this prop to BudgetPlanner
+<BudgetPlanner
+  // ... your existing props
+  materialCosts={materialCosts}  // ✅ NEW
+/>
 
 /**
  * Main App component that provides the application structure
