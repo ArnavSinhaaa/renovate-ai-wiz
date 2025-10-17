@@ -5,11 +5,21 @@
  */
 
 import React from 'react';
-import { TrendingUp, TrendingDown, DollarSign, Clock, CheckCircle, AlertCircle, X } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Clock, CheckCircle, AlertCircle, X, Palette, Layers, Square } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { RenovationSuggestion } from '@/data/renovationSuggestions';
+
+/**
+ * Material costs interface
+ */
+export interface MaterialCosts {
+  walls: number;
+  flooring: number;
+  tiles: number;
+  total: number;
+}
 
 /**
  * Props interface for BudgetPlanner component
@@ -22,6 +32,8 @@ interface BudgetPlannerProps {
   cartItems: RenovationSuggestion[];
   /** Callback function to remove an item from cart */
   onRemoveItem: (id: string) => void;
+  /** Material costs for walls, flooring, and tiles */
+  materialCosts?: MaterialCosts;
 }
 
 /**
@@ -29,9 +41,13 @@ interface BudgetPlannerProps {
  * @param props - Component props
  * @returns JSX element containing the budget management interface
  */
-export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budget, cartItems, onRemoveItem }) => {
+export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budget, cartItems, onRemoveItem, materialCosts }) => {
   // Calculate total cost of all selected items
-  const totalCost = cartItems.reduce((sum, item) => sum + item.cost, 0);
+  const renovationCost = cartItems.reduce((sum, item) => sum + item.cost, 0);
+  
+  // Add material costs to total
+  const materialTotal = materialCosts?.total || 0;
+  const totalCost = renovationCost + materialTotal;
   
   // Calculate total project timeline (longest individual item time)
   const totalTime = Math.max(...cartItems.map(item => item.time), 0);
@@ -48,8 +64,8 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budget, cartItems,
     return acc;
   }, {} as Record<string, number>);
 
-  // Show empty state when no items are selected
-  if (cartItems.length === 0) {
+  // Show empty state when no items are selected and no materials chosen
+  if (cartItems.length === 0 && !materialCosts) {
     return (
       <Card className="shadow-soft">
         <CardHeader>
@@ -60,7 +76,7 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budget, cartItems,
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
-            <p>Add renovation suggestions to see your budget breakdown</p>
+            <p>Add renovation suggestions or customize materials to see your budget breakdown</p>
           </div>
         </CardContent>
       </Card>
@@ -135,53 +151,98 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budget, cartItems,
           )}
         </div>
 
-        {/* Impact level summary */}
+        {/* Cost Breakdown */}
         <div className="space-y-3">
-          <h4 className="font-medium">Impact Summary</h4>
-          <div className="flex gap-2 flex-wrap">
-            {Object.entries(impactCounts).map(([impact, count]) => (
-              <Badge 
-                key={impact} 
-                variant="outline"
-                className="flex items-center gap-1"
-              >
-                {impact === 'High' && <TrendingUp className="w-3 h-3" />}
-                {impact === 'Medium' && <TrendingDown className="w-3 h-3" />}
-                {count} {impact} Impact
-              </Badge>
-            ))}
+          <h4 className="font-medium">Cost Breakdown</h4>
+          <div className="space-y-2 text-sm">
+            {cartItems.length > 0 && (
+              <div className="flex justify-between items-center p-2 bg-muted/30 rounded">
+                <span className="text-muted-foreground flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" />
+                  Renovations ({cartItems.length} items)
+                </span>
+                <span className="font-medium">₹{renovationCost.toLocaleString()}</span>
+              </div>
+            )}
+            {materialCosts && materialCosts.total > 0 && (
+              <>
+                <div className="flex justify-between items-center p-2 bg-muted/30 rounded">
+                  <span className="text-muted-foreground flex items-center gap-2">
+                    <Palette className="w-4 h-4" />
+                    Wall Paint
+                  </span>
+                  <span className="font-medium">₹{materialCosts.walls.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center p-2 bg-muted/30 rounded">
+                  <span className="text-muted-foreground flex items-center gap-2">
+                    <Layers className="w-4 h-4" />
+                    Flooring
+                  </span>
+                  <span className="font-medium">₹{materialCosts.flooring.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center p-2 bg-muted/30 rounded">
+                  <span className="text-muted-foreground flex items-center gap-2">
+                    <Square className="w-4 h-4" />
+                    Tiles
+                  </span>
+                  <span className="font-medium">₹{materialCosts.tiles.toLocaleString()}</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Selected renovation items list */}
-        <div className="space-y-3">
-          <h4 className="font-medium">Selected Renovations ({cartItems.length})</h4>
-          <div className="space-y-2 max-h-32 overflow-y-auto">
-            {cartItems.map((item) => (
-              <div key={item.id} className="flex justify-between items-center text-sm p-2 bg-muted/50 rounded group hover:bg-muted transition-colors">
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{item.suggestion}</p>
-                  <p className="text-muted-foreground text-xs">{item.room}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="text-right">
-                    <p className="font-medium">₹{item.cost.toLocaleString()}</p>
-                    <p className="text-muted-foreground text-xs">{item.time}d</p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => onRemoveItem(item.id)}
-                    aria-label="Remove item"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+        {/* Impact level summary */}
+        {cartItems.length > 0 && (
+          <div className="space-y-3">
+            <h4 className="font-medium">Impact Summary</h4>
+            <div className="flex gap-2 flex-wrap">
+              {Object.entries(impactCounts).map(([impact, count]) => (
+                <Badge 
+                  key={impact} 
+                  variant="outline"
+                  className="flex items-center gap-1"
+                >
+                  {impact === 'High' && <TrendingUp className="w-3 h-3" />}
+                  {impact === 'Medium' && <TrendingDown className="w-3 h-3" />}
+                  {count} {impact} Impact
+                </Badge>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Selected renovation items list */}
+        {cartItems.length > 0 && (
+          <div className="space-y-3">
+            <h4 className="font-medium">Selected Renovations ({cartItems.length})</h4>
+            <div className="space-y-2 max-h-32 overflow-y-auto">
+              {cartItems.map((item) => (
+                <div key={item.id} className="flex justify-between items-center text-sm p-2 bg-muted/50 rounded group hover:bg-muted transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{item.suggestion}</p>
+                    <p className="text-muted-foreground text-xs">{item.room}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <p className="font-medium">₹{item.cost.toLocaleString()}</p>
+                      <p className="text-muted-foreground text-xs">{item.time}d</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => onRemoveItem(item.id)}
+                      aria-label="Remove item"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
