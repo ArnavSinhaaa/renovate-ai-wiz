@@ -233,7 +233,7 @@ ${cartItems.map((item, i) => `${i + 1}. ${item.suggestion} - ₹${item.cost.toLo
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h4 className="font-semibold flex items-center gap-2">
-              <PieChart className="w-4 h-4" />
+              <DollarSign className="w-4 h-4" />
               Cost Breakdown
             </h4>
             <Button
@@ -248,12 +248,12 @@ ${cartItems.map((item, i) => `${i + 1}. ${item.suggestion} - ₹${item.cost.toLo
           {showDetails && (
             <div className="space-y-2 text-sm">
               {cartItems.length > 0 && (
-                <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-lg border border-blue-200 hover:shadow-sm transition-shadow">
-                  <span className="font-medium flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-blue-600" />
+                <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg border border-blue-600 hover:shadow-sm transition-shadow">
+                  <span className="font-medium flex items-center gap-2 text-white">
+                    <TrendingUp className="w-4 h-4 text-white" />
                     Renovations ({cartItems.length} items)
                   </span>
-                  <span className="font-bold text-blue-700">₹{renovationCost.toLocaleString()}</span>
+                  <span className="font-bold text-white">₹{renovationCost.toLocaleString()}</span>
                 </div>
               )}
               {materialCosts && materialCosts.total > 0 && (
@@ -371,7 +371,7 @@ ${cartItems.map((item, i) => `${i + 1}. ${item.suggestion} - ₹${item.cost.toLo
           </div>
           <div className="text-center p-2 rounded bg-muted/30">
             <p className="text-xs text-muted-foreground">Total Items</p>
-            <p className="font-bold text-sm">{cartItems.length}</p>
+            <p className="font-bold text-sm">{cartItems.length + (materialCosts && materialCosts.total > 0 ? 1 : 0)}</p>
           </div>
           <div className="text-center p-2 rounded bg-muted/30">
             <p className="text-xs text-muted-foreground">Daily Cost</p>
@@ -382,30 +382,3 @@ ${cartItems.map((item, i) => `${i + 1}. ${item.suggestion} - ₹${item.cost.toLo
     </Card>
   );
 };
-
-// Add custom scrollbar styles to your global CSS
-const styles = `
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.3);
-  border-radius: 3px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
-}
-`;
