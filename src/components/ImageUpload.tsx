@@ -72,7 +72,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       console.log('Calling analyze-room function...');
       
       const { data, error } = await supabase.functions.invoke('analyze-room-v2', {
-        body: { imageBase64: base64Data, selectedProvider: 'GROQ', selectedModel: 'llama-3.2-11b-vision-preview' }
+        body: { imageBase64: base64Data, selectedProvider: 'GROQ', selectedModel: 'llama-3.2-90b-vision-preview' }
       });
 
       if (error) {

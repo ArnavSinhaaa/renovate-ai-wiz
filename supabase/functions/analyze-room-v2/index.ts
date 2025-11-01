@@ -10,7 +10,7 @@ const AI_PROVIDERS = {
   GROQ: {
     name: 'Groq',
     endpoint: 'https://api.groq.com/openai/v1/chat/completions',
-    models: ['llama-3.2-11b-vision-preview', 'llama-3.2-90b-vision-preview'],
+    models: ['llama-3.2-90b-vision-preview', 'llava-v1.5-7b-4096-preview'],
     keyName: 'GROQ_API_KEY',
     freeLimit: 100, // requests per day
     rateLimit: 30 // requests per minute

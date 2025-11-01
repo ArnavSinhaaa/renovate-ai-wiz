@@ -20,11 +20,11 @@ const AI_PROVIDERS: AIProvider[] = [
   {
     id: 'GROQ',
     name: 'Groq',
-    models: ['llama-3.2-11b-vision-preview', 'llama-3.2-90b-vision-preview'],
+    models: ['llama-3.2-90b-vision-preview', 'llava-v1.5-7b-4096-preview'],
     freeLimit: 100,
     rateLimit: 30,
     status: 'available',
-    description: 'Fast inference with Llama models'
+    description: 'Fast inference with Llama vision models'
   },
   {
     id: 'GOOGLE',

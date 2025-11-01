@@ -225,7 +225,7 @@ export const updateSuggestionSelection = async (
   try {
     const { error } = await supabase
       .from('renovation_suggestions')
-      .update({ is_selected: isSelected } as any)
+      .update({ is_selected: isSelected } as unknown as never)
       .eq('id', suggestionId);
 
     if (error) {
@@ -261,8 +261,8 @@ export const saveUserSession = async (
         .update({
           session_data: sessionData,
           last_activity: new Date().toISOString(),
-        } as any)
-        .eq('id', existingSession.id)
+        } as unknown as never)
+        .eq('id', (existingSession as any).id)
         .select()
         .single();
 

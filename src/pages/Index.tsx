@@ -75,6 +75,14 @@ const Index = () => {
     isLoading: userLoading,
     error: userError
   } = useUserSession();
+
+  // AI Provider settings
+  const [analysisProvider, setAnalysisProvider] = useState('GROQ');
+  const [analysisModel, setAnalysisModel] = useState('llama-3.2-90b-vision-preview');
+  const [imageProvider, setImageProvider] = useState('HUGGINGFACE');
+  const [imageModel, setImageModel] = useState('black-forest-labs/FLUX.1-schnell');
+  const [providerStatus, setProviderStatus] = useState<{ [key: string]: string }>({});
+
   /**
    * Handles image upload from user
    * Creates a URL for the uploaded file and starts the analysis process
