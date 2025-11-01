@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { generateWithStability } from "./stability.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,21 +8,29 @@ const corsHeaders = {
 
 // Image Generation Provider configurations
 const IMAGE_PROVIDERS = {
+  HUGGINGFACE: {
+    name: 'Hugging Face',
+    endpoint: 'https://api-inference.huggingface.co/models/',
+    models: ['black-forest-labs/FLUX.1-schnell', 'black-forest-labs/FLUX.1-dev', 'stabilityai/stable-diffusion-xl-base-1.0'],
+    keyName: 'HUGGINGFACE_API_KEY',
+    freeLimit: 100, // requests per month
+    rateLimit: 10 // requests per minute
+  },
   REPLICATE: {
     name: 'Replicate',
     endpoint: 'https://api.replicate.com/v1/predictions',
-    models: ['black-forest-labs/flux-schnell', 'stability-ai/stable-diffusion-3'],
+    models: ['black-forest-labs/flux-schnell', 'stability-ai/sdxl'],
     keyName: 'REPLICATE_API_TOKEN',
     freeLimit: 50, // requests per month
     rateLimit: 5 // requests per minute
   },
-  HUGGINGFACE: {
-    name: 'Hugging Face',
-    endpoint: 'https://api-inference.huggingface.co/models/',
-    models: ['black-forest-labs/FLUX.1-schnell', 'stabilityai/stable-diffusion-xl-base-1.0'],
-    keyName: 'HUGGINGFACE_API_KEY',
-    freeLimit: 100, // requests per month
-    rateLimit: 10 // requests per minute
+  STABILITY: {
+    name: 'Stability AI',
+    endpoint: 'https://api.stability.ai/v1/generation/',
+    models: ['stable-diffusion-xl-1024-v1-0', 'stable-diffusion-v1-6'],
+    keyName: 'STABILITY_API_KEY',
+    freeLimit: 25, // requests per month
+    rateLimit: 5 // requests per minute
   },
   LOVABLE: {
     name: 'Lovable AI',
@@ -85,6 +94,8 @@ serve(async (req) => {
       response = await generateWithReplicate(apiKey, model, prompt, originalImage, width, height);
     } else if (selectedProvider === 'HUGGINGFACE') {
       response = await generateWithHuggingFace(apiKey, model, prompt, originalImage);
+    } else if (selectedProvider === 'STABILITY') {
+      response = await generateWithStability(apiKey, model, prompt, width, height);
     } else if (selectedProvider === 'LOVABLE') {
       response = await generateWithLovable(apiKey, model, prompt, originalImage);
     } else {

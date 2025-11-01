@@ -18,6 +18,24 @@ interface AIProvider {
 
 const AI_PROVIDERS: AIProvider[] = [
   {
+    id: 'GOOGLE',
+    name: 'Google Gemini',
+    models: ['gemini-1.5-flash', 'gemini-1.5-pro'],
+    freeLimit: 1500,
+    rateLimit: 15,
+    status: 'available',
+    description: 'Google\'s powerful Gemini models - Best for detailed room analysis'
+  },
+  {
+    id: 'OPENAI',
+    name: 'OpenAI GPT-4',
+    models: ['gpt-4o-mini', 'gpt-4o'],
+    freeLimit: 200,
+    rateLimit: 10,
+    status: 'available',
+    description: 'OpenAI vision models - Excellent for object detection'
+  },
+  {
     id: 'GROQ',
     name: 'Groq',
     models: ['llama-3.2-90b-vision-preview', 'llava-v1.5-7b-4096-preview'],
@@ -25,24 +43,6 @@ const AI_PROVIDERS: AIProvider[] = [
     rateLimit: 30,
     status: 'available',
     description: 'Fast inference with Llama vision models'
-  },
-  {
-    id: 'GOOGLE',
-    name: 'Google AI Studio',
-    models: ['gemini-1.5-flash', 'gemini-1.5-pro'],
-    freeLimit: 1500,
-    rateLimit: 15,
-    status: 'available',
-    description: 'Google\'s powerful Gemini models'
-  },
-  {
-    id: 'HUGGINGFACE',
-    name: 'Hugging Face',
-    models: ['microsoft/DialoGPT-large', 'microsoft/BlenderBot-400M-distill'],
-    freeLimit: 1000,
-    rateLimit: 10,
-    status: 'available',
-    description: 'Open source models from Hugging Face'
   },
   {
     id: 'LOVABLE',
@@ -57,22 +57,31 @@ const AI_PROVIDERS: AIProvider[] = [
 
 const IMAGE_PROVIDERS: AIProvider[] = [
   {
-    id: 'REPLICATE',
-    name: 'Replicate',
-    models: ['black-forest-labs/flux-schnell', 'stability-ai/stable-diffusion-3'],
-    freeLimit: 50,
-    rateLimit: 5,
-    status: 'available',
-    description: 'High-quality image generation'
-  },
-  {
     id: 'HUGGINGFACE',
     name: 'Hugging Face',
-    models: ['black-forest-labs/FLUX.1-schnell', 'stabilityai/stable-diffusion-xl-base-1.0'],
+    models: ['black-forest-labs/FLUX.1-schnell', 'black-forest-labs/FLUX.1-dev', 'stabilityai/stable-diffusion-xl-base-1.0'],
     freeLimit: 100,
     rateLimit: 10,
     status: 'available',
-    description: 'Free image generation models'
+    description: 'Free FLUX & Stable Diffusion models - Best free option'
+  },
+  {
+    id: 'REPLICATE',
+    name: 'Replicate',
+    models: ['black-forest-labs/flux-schnell', 'stability-ai/sdxl'],
+    freeLimit: 50,
+    rateLimit: 5,
+    status: 'available',
+    description: 'High-quality image generation with FLUX'
+  },
+  {
+    id: 'STABILITY',
+    name: 'Stability AI',
+    models: ['stable-diffusion-xl-1024-v1-0', 'stable-diffusion-v1-6'],
+    freeLimit: 25,
+    rateLimit: 5,
+    status: 'available',
+    description: 'Professional SDXL models - High quality results'
   },
   {
     id: 'LOVABLE',

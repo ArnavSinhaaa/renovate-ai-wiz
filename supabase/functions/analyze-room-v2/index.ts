@@ -7,6 +7,22 @@ const corsHeaders = {
 
 // AI Provider configurations
 const AI_PROVIDERS = {
+  GOOGLE: {
+    name: 'Google Gemini',
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/',
+    models: ['gemini-1.5-flash', 'gemini-1.5-pro'],
+    keyName: 'GOOGLE_AI_KEY',
+    freeLimit: 1500, // requests per day
+    rateLimit: 15 // requests per minute
+  },
+  OPENAI: {
+    name: 'OpenAI GPT-4',
+    endpoint: 'https://api.openai.com/v1/chat/completions',
+    models: ['gpt-4o-mini', 'gpt-4o'],
+    keyName: 'OPENAI_API_KEY',
+    freeLimit: 200, // depends on account
+    rateLimit: 10 // requests per minute
+  },
   GROQ: {
     name: 'Groq',
     endpoint: 'https://api.groq.com/openai/v1/chat/completions',
@@ -14,22 +30,6 @@ const AI_PROVIDERS = {
     keyName: 'GROQ_API_KEY',
     freeLimit: 100, // requests per day
     rateLimit: 30 // requests per minute
-  },
-  GOOGLE: {
-    name: 'Google AI Studio',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/',
-    models: ['gemini-1.5-flash', 'gemini-1.5-pro'],
-    keyName: 'GOOGLE_AI_KEY',
-    freeLimit: 1500, // requests per day
-    rateLimit: 15 // requests per minute
-  },
-  HUGGINGFACE: {
-    name: 'Hugging Face',
-    endpoint: 'https://api-inference.huggingface.co/models/',
-    models: ['microsoft/DialoGPT-large', 'microsoft/BlenderBot-400M-distill'],
-    keyName: 'HUGGINGFACE_API_KEY',
-    freeLimit: 1000, // requests per month
-    rateLimit: 10 // requests per minute
   },
   LOVABLE: {
     name: 'Lovable AI',
@@ -114,6 +114,8 @@ Provide 3-7 realistic objects with Indian pricing in Rupees. Make suggestions pr
       response = await analyzeWithGroq(apiKey, model, analysisPrompt, imageBase64);
     } else if (selectedProvider === 'GOOGLE') {
       response = await analyzeWithGoogle(apiKey, model, analysisPrompt, imageBase64);
+    } else if (selectedProvider === 'OPENAI') {
+      response = await analyzeWithOpenAI(apiKey, model, analysisPrompt, imageBase64);
     } else if (selectedProvider === 'LOVABLE') {
       response = await analyzeWithLovable(apiKey, model, analysisPrompt, imageBase64);
     } else {
@@ -272,6 +274,59 @@ async function analyzeWithGoogle(apiKey: string, model: string, prompt: string, 
 
   } catch (error) {
     return { error: `Google AI analysis failed: ${error.message}` };
+  }
+}
+
+async function analyzeWithOpenAI(apiKey: string, model: string, prompt: string, imageBase64: string) {
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: prompt },
+              { 
+                type: 'image_url', 
+                image_url: { url: imageBase64 }
+              }
+            ]
+          }
+        ],
+        max_tokens: 2000,
+        temperature: 0.3
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return { error: `OpenAI API error: ${response.status} - ${errorText}`, status: response.status };
+    }
+
+    const data = await response.json();
+    const content = data.choices[0]?.message?.content;
+    
+    if (!content) {
+      return { error: 'No content received from OpenAI' };
+    }
+
+    // Clean and parse JSON response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return { error: 'No valid JSON found in response' };
+    }
+
+    const parsedData = JSON.parse(jsonMatch[0]);
+    return { data: parsedData };
+
+  } catch (error) {
+    return { error: `OpenAI analysis failed: ${error.message}` };
   }
 }
 

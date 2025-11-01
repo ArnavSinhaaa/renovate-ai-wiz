@@ -76,10 +76,10 @@ const Index = () => {
     error: userError
   } = useUserSession();
 
-  // AI Provider settings
-  const [analysisProvider, setAnalysisProvider] = useState('GROQ');
-  const [analysisModel, setAnalysisModel] = useState('llama-3.2-90b-vision-preview');
-  const [imageProvider, setImageProvider] = useState('HUGGINGFACE');
+  // AI Provider settings - Default to best free options
+  const [analysisProvider, setAnalysisProvider] = useState('GOOGLE'); // Google Gemini has best free tier
+  const [analysisModel, setAnalysisModel] = useState('gemini-1.5-flash');
+  const [imageProvider, setImageProvider] = useState('HUGGINGFACE'); // Hugging Face is completely free
   const [imageModel, setImageModel] = useState('black-forest-labs/FLUX.1-schnell');
   const [providerStatus, setProviderStatus] = useState<{ [key: string]: string }>({});
 
