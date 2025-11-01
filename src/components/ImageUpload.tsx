@@ -71,8 +71,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       const base64Data = await convertToBase64(file);
       console.log('Calling analyze-room function...');
       
-      const { data, error } = await supabase.functions.invoke('analyze-room', {
-        body: { imageData: base64Data }
+      const { data, error } = await supabase.functions.invoke('analyze-room-v2', {
+        body: { imageBase64: base64Data, selectedProvider: 'GROQ', selectedModel: 'llama-3.2-11b-vision-preview' }
       });
 
       if (error) {
@@ -81,6 +81,9 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       }
 
       console.log('Analysis complete:', data);
+      if (data.status === 'rate_limited') {
+        toast.error('Analysis provider rate limited. Please try again later or switch provider.');
+      }
       const detectedObjects = data.detectedObjects || [];
       
       if (currentImageId) {
@@ -106,6 +109,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       onAnalysisComplete(detectedObjects);
     } catch (error) {
       console.error('Failed to analyze image:', error);
+      toast.error('Failed to analyze image. Falling back to default detection.');
       const mockObjects = [
         { name: 'sofa', confidence: 0.9, location: 'Center', condition: 'Could use refreshing' },
         { name: 'lighting', confidence: 0.8, location: 'Ceiling', condition: 'Basic overhead lighting' },

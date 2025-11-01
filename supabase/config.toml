@@ -36,6 +36,12 @@ verify_jwt = false
 [functions.generate-renovation]
 verify_jwt = false
 
+[functions.analyze-room-v2]
+verify_jwt = false
+
+[functions.generate-image-v2]
+verify_jwt = false
+
 [edge-runtime]
 enabled = true
 port = 54329

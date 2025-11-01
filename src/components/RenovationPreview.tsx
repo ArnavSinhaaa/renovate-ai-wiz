@@ -13,13 +13,21 @@ interface RenovationPreviewProps {
   roomType?: string;
   budget: number;
   uploadedImage: string | null;
+  imageProvider?: string;
+  imageModel?: string;
+  providerStatus?: { [key: string]: string };
+  onProviderStatusUpdate?: (provider: string, status: string) => void;
 }
 
 export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
   selectedSuggestions,
   roomType,
   budget,
-  uploadedImage
+  uploadedImage,
+  imageProvider = 'HUGGINGFACE',
+  imageModel = 'black-forest-labs/FLUX.1-schnell',
+  providerStatus = {},
+  onProviderStatusUpdate
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -67,18 +75,16 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
         ? `Apply these renovations: ${suggestions.join(', ')}`
         : 'Upgrade the room with modern improvements. Focus on wall paint and flooring/tile customization as specified.';
       
-      console.log('Editing room photo for lighting renovation...');
+      console.log('Generating room renovation preview...');
       
-      const { data, error } = await supabase.functions.invoke('generate-renovation', {
+      const { data, error } = await supabase.functions.invoke('generate-image-v2', {
         body: {
-          prompt,
-          selectedSuggestions: suggestions,
-          roomType,
-          budget,
-          imageBase64,
-          wallColors,
-          flooring,
-          tile
+          prompt: `${prompt}. Apply these wall colors: ${Object.values(wallColors).map(w => w.name).join(', ')}. Use ${flooring.name} flooring and ${tile.name} tiles. Make it look realistic and beautiful.`,
+          originalImage: imageBase64,
+          selectedProvider: imageProvider,
+          selectedModel: imageModel,
+          width: 1024,
+          height: 1024
         }
       });
 
@@ -88,8 +94,22 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
       }
 
       console.log('Image generated successfully');
+      
+      // Update provider status
+      if (data.status && onProviderStatusUpdate) {
+        onProviderStatusUpdate(imageProvider, data.status);
+      }
+      
+      if (data.status === 'rate_limited') {
+        alert(`${data.provider} rate limit exceeded. Try switching providers or wait before retrying.`);
+        return;
+      } else if (data.status === 'out_of_service') {
+        alert(`${data.provider} is out of service. Please check API configuration.`);
+        return;
+      }
+      
       setGeneratedImage(data.imageUrl);
-      setGenerationPrompt(data.prompt);
+      setGenerationPrompt(data.prompt || prompt);
     } catch (error) {
       console.error('Failed to generate renovation preview:', error);
       alert('Failed to generate preview. Please try again.');
@@ -221,7 +241,6 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
           
           <TabsContent value="colors" className="space-y-4">
             <WallColorCustomizer
-              roomType={roomType || 'Room'}
               onWallColorsChange={handleWallColorsChange}
               wallColors={wallColors}
               onFlooringChange={setFlooring}

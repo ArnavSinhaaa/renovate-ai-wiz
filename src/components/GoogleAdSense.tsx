@@ -33,7 +33,7 @@ export const GoogleAdSense: React.FC<GoogleAdSenseProps> = ({
   className = '',
   responsive = true
 }) => {
-  const adRef = useRef<HTMLDivElement>(null);
+  const adRef = useRef<HTMLModElement>(null);
 
   useEffect(() => {
     // Load Google AdSense script if not already loaded

@@ -44,7 +44,7 @@ export const getOrCreateUser = async (sessionId: string): Promise<User> => {
     // If user doesn't exist, create one
     const { data: newUser, error: createError } = await supabase
       .from('users')
-      .insert({ session_id: sessionId })
+      .insert({ session_id: sessionId } as any)
       .select()
       .single();
 
@@ -80,7 +80,7 @@ export const saveUserImage = async (
         image_name: imageData.imageName,
         image_size: imageData.imageSize,
         image_type: imageData.imageType,
-      })
+      } as any)
       .select()
       .single();
 
@@ -126,7 +126,7 @@ export const saveAnalysisResult = async (
   try {
     const { data, error } = await supabase
       .from('analysis_results')
-      .insert(analysisData)
+      .insert(analysisData as any)
       .select()
       .single();
 
@@ -179,7 +179,7 @@ export const saveRenovationSuggestions = async (
   try {
     const { data, error } = await supabase
       .from('renovation_suggestions')
-      .insert(suggestions)
+      .insert(suggestions as any)
       .select();
 
     if (error) {
@@ -225,7 +225,7 @@ export const updateSuggestionSelection = async (
   try {
     const { error } = await supabase
       .from('renovation_suggestions')
-      .update({ is_selected: isSelected })
+      .update({ is_selected: isSelected } as any)
       .eq('id', suggestionId);
 
     if (error) {
@@ -261,7 +261,7 @@ export const saveUserSession = async (
         .update({
           session_data: sessionData,
           last_activity: new Date().toISOString(),
-        })
+        } as any)
         .eq('id', existingSession.id)
         .select()
         .single();
@@ -279,7 +279,7 @@ export const saveUserSession = async (
           user_id: userId,
           session_data: sessionData,
           last_activity: new Date().toISOString(),
-        })
+        } as any)
         .select()
         .single();
 
@@ -383,7 +383,7 @@ export const getUserStats = async (userId: string): Promise<{
       totalImages: imagesResult.count || 0,
       totalAnalyses: analysesResult.count || 0,
       totalSuggestions,
-      lastActivity: sessionResult.data?.last_activity || null,
+      lastActivity: (sessionResult.data as any)?.last_activity || null,
     };
   } catch (error) {
     console.error('Error in getUserStats:', error);
