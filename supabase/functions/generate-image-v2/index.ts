@@ -57,34 +57,51 @@ serve(async (req) => {
       height = 1024
     } = await req.json();
     
+    console.log(`[generate-image-v2] Request received:`, {
+      provider: selectedProvider,
+      model: selectedModel,
+      hasImage: !!originalImage,
+      promptLength: prompt?.length,
+      dimensions: `${width}x${height}`
+    });
+    
     if (!prompt) {
+      console.error('[generate-image-v2] Error: Missing prompt');
       return new Response(
         JSON.stringify({ error: 'Prompt is required for image generation' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Starting image generation with ${selectedProvider}...`);
+    console.log(`[generate-image-v2] Starting generation with ${selectedProvider}...`);
     
     const provider = IMAGE_PROVIDERS[selectedProvider as keyof typeof IMAGE_PROVIDERS];
     if (!provider) {
+      console.error(`[generate-image-v2] Error: Invalid provider "${selectedProvider}"`);
       return new Response(
-        JSON.stringify({ error: 'Invalid image provider selected' }),
+        JSON.stringify({ 
+          error: `Invalid image provider selected: ${selectedProvider}`,
+          availableProviders: Object.keys(IMAGE_PROVIDERS)
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const apiKey = Deno.env.get(provider.keyName);
     if (!apiKey) {
+      console.error(`[generate-image-v2] Error: API key not found for ${provider.name} (${provider.keyName})`);
       return new Response(
         JSON.stringify({ 
-          error: `${provider.name} API key not configured`,
+          error: `${provider.name} API key not configured. Please add ${provider.keyName} to your Supabase secrets.`,
           provider: provider.name,
+          keyName: provider.keyName,
           status: 'out_of_service'
         }),
         { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log(`[generate-image-v2] Using ${provider.name} with model: ${selectedModel || provider.models[0]}`);
 
     const model = selectedModel || provider.models[0];
     
@@ -103,12 +120,19 @@ serve(async (req) => {
     }
 
     if (response.error) {
+      console.error(`[generate-image-v2] Generation failed:`, {
+        provider: provider.name,
+        error: response.error,
+        status: response.status
+      });
+      
       if (response.status === 429) {
         return new Response(
           JSON.stringify({
-            error: `${provider.name} rate limit exceeded. Try again later.`,
+            error: `${provider.name} rate limit exceeded. Please wait and try again, or switch to a different provider.`,
             provider: provider.name,
-            status: 'rate_limited'
+            status: 'rate_limited',
+            details: response.error
           }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
@@ -118,13 +142,15 @@ serve(async (req) => {
         JSON.stringify({
           error: response.error,
           provider: provider.name,
-          status: 'error'
+          model: model,
+          status: 'error',
+          suggestion: 'Try switching to a different provider or check API key configuration'
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Image generation completed successfully');
+    console.log(`[generate-image-v2] Generation completed successfully with ${provider.name}`);
 
     return new Response(
       JSON.stringify({
@@ -138,12 +164,17 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Image generation error:', error);
+    console.error('[generate-image-v2] Unexpected error:', {
+      message: error.message,
+      stack: error.stack,
+      type: error.constructor.name
+    });
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to generate image',
+        error: 'Failed to generate image due to unexpected error',
         details: error.message,
-        status: 'error'
+        status: 'error',
+        suggestion: 'Check edge function logs for more details'
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -151,6 +182,7 @@ serve(async (req) => {
 });
 
 async function generateWithReplicate(apiKey: string, model: string, prompt: string, originalImage?: string, width = 1024, height = 1024) {
+  console.log(`[Replicate] Starting generation with model: ${model}`);
   try {
     const input: any = {
       prompt: prompt,
@@ -180,6 +212,7 @@ async function generateWithReplicate(apiKey: string, model: string, prompt: stri
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`[Replicate] API error: ${response.status}`, errorText);
       return { error: `Replicate API error: ${response.status} - ${errorText}`, status: response.status };
     }
 
@@ -196,17 +229,21 @@ async function generateWithReplicate(apiKey: string, model: string, prompt: stri
     }
 
     if (result.status === 'succeeded') {
+      console.log(`[Replicate] Generation succeeded`);
       return { imageUrl: result.output[0] };
     } else {
+      console.error(`[Replicate] Generation failed:`, result.error);
       return { error: `Generation failed: ${result.error}` };
     }
 
   } catch (error) {
+    console.error(`[Replicate] Exception:`, error);
     return { error: `Replicate generation failed: ${error.message}` };
   }
 }
 
 async function generateWithHuggingFace(apiKey: string, model: string, prompt: string, originalImage?: string) {
+  console.log(`[HuggingFace] Starting generation with model: ${model}`);
   try {
     const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
       method: 'POST',
@@ -225,6 +262,7 @@ async function generateWithHuggingFace(apiKey: string, model: string, prompt: st
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`[HuggingFace] API error: ${response.status}`, errorText);
       return { error: `Hugging Face API error: ${response.status} - ${errorText}`, status: response.status };
     }
 
@@ -232,14 +270,17 @@ async function generateWithHuggingFace(apiKey: string, model: string, prompt: st
     const arrayBuffer = await imageBlob.arrayBuffer();
     const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
     
+    console.log(`[HuggingFace] Generation succeeded, image size: ${arrayBuffer.byteLength} bytes`);
     return { imageUrl: `data:image/png;base64,${base64}` };
 
   } catch (error) {
+    console.error(`[HuggingFace] Exception:`, error);
     return { error: `Hugging Face generation failed: ${error.message}` };
   }
 }
 
 async function generateWithLovable(apiKey: string, model: string, prompt: string, originalImage?: string) {
+  console.log(`[Lovable] Starting generation with model: ${model}`);
   try {
     const messages: any[] = [
       {
@@ -266,6 +307,7 @@ async function generateWithLovable(apiKey: string, model: string, prompt: string
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`[Lovable] API error: ${response.status}`, errorText);
       return { error: `Lovable AI error: ${response.status} - ${errorText}`, status: response.status };
     }
 
@@ -273,12 +315,15 @@ async function generateWithLovable(apiKey: string, model: string, prompt: string
     const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
     
     if (!imageUrl) {
+      console.error(`[Lovable] No image in response:`, data);
       return { error: 'No image received from Lovable AI' };
     }
 
+    console.log(`[Lovable] Generation succeeded`);
     return { imageUrl };
 
   } catch (error) {
+    console.error(`[Lovable] Exception:`, error);
     return { error: `Lovable AI generation failed: ${error.message}` };
   }
 }

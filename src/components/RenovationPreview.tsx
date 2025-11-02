@@ -89,11 +89,14 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
       });
 
       if (error) {
-        console.error('Error generating image:', error);
-        throw error;
+        console.error('Edge function error:', error);
+        const errorMessage = `Failed to generate image:\n\nError: ${error.message || 'Unknown error'}\n\nProvider: ${imageProvider}\nModel: ${imageModel}\n\nPlease check:\n1. API key is configured in Supabase secrets\n2. Provider is not rate limited\n3. Edge function logs for details`;
+        alert(errorMessage);
+        setIsGenerating(false);
+        return;
       }
 
-      console.log('Image generated successfully');
+      console.log('Edge function response:', data);
       
       // Update provider status
       if (data.status && onProviderStatusUpdate) {
@@ -101,18 +104,27 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
       }
       
       if (data.status === 'rate_limited') {
-        alert(`${data.provider} rate limit exceeded. Try switching providers or wait before retrying.`);
+        alert(`⚠️ Rate Limit Exceeded\n\nProvider: ${data.provider}\n\nThe ${data.provider} rate limit has been exceeded.\n\nSolutions:\n1. Wait a few minutes and try again\n2. Switch to a different provider\n3. Check your API usage limits\n\nDetails: ${data.details || data.error}`);
         return;
       } else if (data.status === 'out_of_service') {
-        alert(`${data.provider} is out of service. Please check API configuration.`);
+        alert(`❌ Provider Unavailable\n\nProvider: ${data.provider}\n\nThe ${data.provider} API is not configured or unavailable.\n\nRequired: ${data.keyName || 'API key'}\n\nPlease:\n1. Add the API key to Supabase secrets\n2. Or switch to a different provider\n\nDetails: ${data.error}`);
+        return;
+      } else if (data.status === 'error') {
+        alert(`❌ Generation Failed\n\nProvider: ${data.provider}\nModel: ${data.model || imageModel}\n\nError: ${data.error}\n\n${data.suggestion || 'Please try again or switch providers'}`);
+        return;
+      }
+      
+      if (!data.imageUrl) {
+        alert('❌ No image received from provider. Please check edge function logs.');
         return;
       }
       
       setGeneratedImage(data.imageUrl);
       setGenerationPrompt(data.prompt || prompt);
+      console.log('Image generated successfully');
     } catch (error) {
       console.error('Failed to generate renovation preview:', error);
-      alert('Failed to generate preview. Please try again.');
+      alert(`❌ Unexpected Error\n\n${error.message || error}\n\nPlease:\n1. Check console for details\n2. Verify edge function is deployed\n3. Check Supabase edge function logs\n4. Try a different provider`);
     } finally {
       setIsGenerating(false);
     }
