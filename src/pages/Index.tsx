@@ -77,8 +77,8 @@ const Index = () => {
   } = useUserSession();
 
   // AI Provider settings - Default to best free options
-  const [analysisProvider, setAnalysisProvider] = useState('GOOGLE'); // Google Gemini has best free tier
-  const [analysisModel, setAnalysisModel] = useState('gemini-1.5-flash');
+  const [analysisProvider, setAnalysisProvider] = useState('LOVABLE'); // Lovable AI is pre-configured and reliable
+  const [analysisModel, setAnalysisModel] = useState('google/gemini-2.5-flash');
   const [imageProvider, setImageProvider] = useState('HUGGINGFACE'); // Hugging Face is completely free
   const [imageModel, setImageModel] = useState('black-forest-labs/FLUX.1-schnell');
   const [providerStatus, setProviderStatus] = useState<{ [key: string]: string }>({});

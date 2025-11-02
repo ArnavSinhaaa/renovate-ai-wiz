@@ -18,13 +18,22 @@ interface AIProvider {
 
 const AI_PROVIDERS: AIProvider[] = [
   {
+    id: 'LOVABLE',
+    name: 'Lovable AI',
+    models: ['google/gemini-2.5-flash', 'google/gemini-2.5-pro'],
+    freeLimit: 50,
+    rateLimit: 5,
+    status: 'available',
+    description: 'Built-in AI gateway with Gemini - Recommended'
+  },
+  {
     id: 'GOOGLE',
     name: 'Google Gemini',
-    models: ['gemini-1.5-flash', 'gemini-1.5-pro'],
+    models: ['gemini-2.0-flash-exp', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'],
     freeLimit: 1500,
     rateLimit: 15,
     status: 'available',
-    description: 'Google\'s powerful Gemini models - Best for detailed room analysis'
+    description: 'Google\'s latest Gemini models - Best for detailed room analysis'
   },
   {
     id: 'OPENAI',
@@ -43,15 +52,6 @@ const AI_PROVIDERS: AIProvider[] = [
     rateLimit: 30,
     status: 'available',
     description: 'Fast inference with Llama vision models'
-  },
-  {
-    id: 'LOVABLE',
-    name: 'Lovable AI',
-    models: ['google/gemini-2.5-flash', 'google/gemini-2.5-pro'],
-    freeLimit: 50,
-    rateLimit: 5,
-    status: 'available',
-    description: 'Built-in AI gateway with Gemini'
   }
 ];
 

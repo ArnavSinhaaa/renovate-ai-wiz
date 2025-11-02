@@ -9,8 +9,8 @@ const corsHeaders = {
 const AI_PROVIDERS = {
   GOOGLE: {
     name: 'Google Gemini',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/',
-    models: ['gemini-1.5-flash', 'gemini-1.5-pro'],
+    endpoint: 'https://generativelanguage.googleapis.com/v1/models/',
+    models: ['gemini-2.0-flash-exp', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'],
     keyName: 'GOOGLE_AI_KEY',
     freeLimit: 1500, // requests per day
     rateLimit: 15 // requests per minute
@@ -47,31 +47,45 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64, selectedProvider = 'GROQ', selectedModel } = await req.json();
+    const { imageBase64, selectedProvider = 'LOVABLE', selectedModel } = await req.json();
+    
+    console.log(`[analyze-room-v2] Request received:`, {
+      provider: selectedProvider,
+      model: selectedModel,
+      hasImage: !!imageBase64,
+      imageSize: imageBase64?.length
+    });
     
     if (!imageBase64) {
+      console.error('[analyze-room-v2] Error: Missing image');
       return new Response(
         JSON.stringify({ error: 'Image is required for analysis' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Starting analysis with ${selectedProvider}...`);
+    console.log(`[analyze-room-v2] Starting analysis with ${selectedProvider}...`);
     
     const provider = AI_PROVIDERS[selectedProvider as keyof typeof AI_PROVIDERS];
     if (!provider) {
+      console.error(`[analyze-room-v2] Error: Invalid provider "${selectedProvider}"`);
       return new Response(
-        JSON.stringify({ error: 'Invalid AI provider selected' }),
+        JSON.stringify({ 
+          error: `Invalid AI provider selected: ${selectedProvider}`,
+          availableProviders: Object.keys(AI_PROVIDERS)
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const apiKey = Deno.env.get(provider.keyName);
     if (!apiKey) {
+      console.error(`[analyze-room-v2] Error: API key not found for ${provider.name} (${provider.keyName})`);
       return new Response(
         JSON.stringify({ 
-          error: `${provider.name} API key not configured`,
+          error: `${provider.name} API key not configured. Please add ${provider.keyName} to Supabase secrets.`,
           provider: provider.name,
+          keyName: provider.keyName,
           status: 'out_of_service'
         }),
         { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -79,6 +93,7 @@ serve(async (req) => {
     }
 
     const model = selectedModel || provider.models[0];
+    console.log(`[analyze-room-v2] Using ${provider.name} with model: ${model}`);
     
     const analysisPrompt = `Analyze this room image and provide a detailed JSON response with detected objects and renovation suggestions. Focus on identifying furniture, lighting, flooring, walls, and potential improvements.
 
@@ -123,12 +138,20 @@ Provide 3-7 realistic objects with Indian pricing in Rupees. Make suggestions pr
     }
 
     if (response.error) {
+      console.error(`[analyze-room-v2] Analysis failed:`, {
+        provider: provider.name,
+        model: model,
+        error: response.error,
+        status: response.status
+      });
+      
       if (response.status === 429) {
         return new Response(
           JSON.stringify({
-            error: `${provider.name} rate limit exceeded. Try again later.`,
+            error: `${provider.name} rate limit exceeded. Please wait and try again.`,
             provider: provider.name,
-            status: 'rate_limited'
+            status: 'rate_limited',
+            details: response.error
           }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
@@ -138,14 +161,16 @@ Provide 3-7 realistic objects with Indian pricing in Rupees. Make suggestions pr
         JSON.stringify({
           error: response.error,
           provider: provider.name,
-          status: 'error'
+          model: model,
+          status: 'error',
+          suggestion: 'Try switching to Lovable AI provider or check API key configuration'
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const result = response.data;
-    console.log('Analysis completed successfully');
+    console.log(`[analyze-room-v2] Analysis completed successfully with ${provider.name}`);
 
     return new Response(
       JSON.stringify({
@@ -158,12 +183,17 @@ Provide 3-7 realistic objects with Indian pricing in Rupees. Make suggestions pr
     );
 
   } catch (error) {
-    console.error('Analysis error:', error);
+    console.error('[analyze-room-v2] Unexpected error:', {
+      message: error.message,
+      stack: error.stack,
+      type: error.constructor.name
+    });
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to analyze room',
+        error: 'Failed to analyze room due to unexpected error',
         details: error.message,
-        status: 'error'
+        status: 'error',
+        suggestion: 'Check edge function logs for more details'
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -171,6 +201,7 @@ Provide 3-7 realistic objects with Indian pricing in Rupees. Make suggestions pr
 });
 
 async function analyzeWithGroq(apiKey: string, model: string, prompt: string, imageBase64: string) {
+  console.log(`[Groq] Starting analysis with model: ${model}`);
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -199,6 +230,7 @@ async function analyzeWithGroq(apiKey: string, model: string, prompt: string, im
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`[Groq] API error: ${response.status}`, errorText);
       return { error: `Groq API error: ${response.status} - ${errorText}`, status: response.status };
     }
 
@@ -216,18 +248,22 @@ async function analyzeWithGroq(apiKey: string, model: string, prompt: string, im
     }
 
     const parsedData = JSON.parse(jsonMatch[0]);
+    console.log(`[Groq] Analysis succeeded, found ${parsedData.detectedObjects?.length || 0} objects`);
     return { data: parsedData };
 
   } catch (error) {
+    console.error(`[Groq] Exception:`, error);
     return { error: `Groq analysis failed: ${error.message}` };
   }
 }
 
 async function analyzeWithGoogle(apiKey: string, model: string, prompt: string, imageBase64: string) {
+  console.log(`[Google] Starting analysis with model: ${model}`);
   try {
     const imageData = imageBase64.split(',')[1] || imageBase64;
     
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+    // Use v1 API endpoint for latest models
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -253,6 +289,7 @@ async function analyzeWithGoogle(apiKey: string, model: string, prompt: string, 
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`[Google] API error: ${response.status}`, errorText);
       return { error: `Google AI error: ${response.status} - ${errorText}`, status: response.status };
     }
 
@@ -270,14 +307,17 @@ async function analyzeWithGoogle(apiKey: string, model: string, prompt: string, 
     }
 
     const parsedData = JSON.parse(jsonMatch[0]);
+    console.log(`[Google] Analysis succeeded, found ${parsedData.detectedObjects?.length || 0} objects`);
     return { data: parsedData };
 
   } catch (error) {
+    console.error(`[Google] Exception:`, error);
     return { error: `Google AI analysis failed: ${error.message}` };
   }
 }
 
 async function analyzeWithOpenAI(apiKey: string, model: string, prompt: string, imageBase64: string) {
+  console.log(`[OpenAI] Starting analysis with model: ${model}`);
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -306,6 +346,7 @@ async function analyzeWithOpenAI(apiKey: string, model: string, prompt: string, 
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`[OpenAI] API error: ${response.status}`, errorText);
       return { error: `OpenAI API error: ${response.status} - ${errorText}`, status: response.status };
     }
 
@@ -323,14 +364,17 @@ async function analyzeWithOpenAI(apiKey: string, model: string, prompt: string, 
     }
 
     const parsedData = JSON.parse(jsonMatch[0]);
+    console.log(`[OpenAI] Analysis succeeded, found ${parsedData.detectedObjects?.length || 0} objects`);
     return { data: parsedData };
 
   } catch (error) {
+    console.error(`[OpenAI] Exception:`, error);
     return { error: `OpenAI analysis failed: ${error.message}` };
   }
 }
 
 async function analyzeWithLovable(apiKey: string, model: string, prompt: string, imageBase64: string) {
+  console.log(`[Lovable] Starting analysis with model: ${model}`);
   try {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -359,6 +403,7 @@ async function analyzeWithLovable(apiKey: string, model: string, prompt: string,
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`[Lovable] API error: ${response.status}`, errorText);
       return { error: `Lovable AI error: ${response.status} - ${errorText}`, status: response.status };
     }
 
@@ -376,9 +421,11 @@ async function analyzeWithLovable(apiKey: string, model: string, prompt: string,
     }
 
     const parsedData = JSON.parse(jsonMatch[0]);
+    console.log(`[Lovable] Analysis succeeded, found ${parsedData.detectedObjects?.length || 0} objects`);
     return { data: parsedData };
 
   } catch (error) {
+    console.error(`[Lovable] Exception:`, error);
     return { error: `Lovable AI analysis failed: ${error.message}` };
   }
 }
