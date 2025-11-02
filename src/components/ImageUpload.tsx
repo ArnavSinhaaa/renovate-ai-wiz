@@ -74,21 +74,34 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       const { data, error } = await supabase.functions.invoke('analyze-room-v2', {
         body: { 
           imageBase64: base64Data, 
-          selectedProvider: 'GOOGLE', // Default to Google Gemini
-          selectedModel: 'gemini-1.5-flash' 
+          selectedProvider: 'LOVABLE', // Default to Lovable AI (pre-configured)
+          selectedModel: 'google/gemini-2.5-flash'
         }
       });
 
       if (error) {
         console.error('Error analyzing image:', error);
+        toast.error(`Analysis failed: ${error.message || 'Unknown error'}`);
         throw error;
       }
 
       console.log('Analysis complete:', data);
-      if (data.status === 'rate_limited') {
-        toast.error('Analysis provider rate limited. Please try again later or switch provider.');
+
+      if (data?.status === 'rate_limited') {
+        toast.error(`Rate limited: ${data.provider}. Please wait or switch provider. Details: ${data.details || data.error}`);
+        return onAnalysisComplete([]);
       }
+      if (data?.status === 'out_of_service') {
+        toast.error(`Provider unavailable: ${data.provider}. Missing secret: ${data.keyName || 'API key'}`);
+        return onAnalysisComplete([]);
+      }
+      if (data?.status === 'error') {
+        toast.error(`Analysis error (${data.provider} - ${data.model || ''}): ${data.error}`);
+        return onAnalysisComplete([]);
+      }
+
       const detectedObjects = data.detectedObjects || [];
+      
       
       if (currentImageId) {
         try {

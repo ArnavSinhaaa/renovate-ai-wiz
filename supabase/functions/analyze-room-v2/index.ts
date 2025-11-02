@@ -92,7 +92,11 @@ serve(async (req) => {
       );
     }
 
-    const model = selectedModel || provider.models[0];
+    let model = selectedModel || provider.models[0];
+    if (selectedProvider === 'GOOGLE') {
+      if (model === 'gemini-1.5-flash') model = 'gemini-1.5-flash-latest';
+      if (model === 'gemini-1.5-pro') model = 'gemini-1.5-pro-latest';
+    }
     console.log(`[analyze-room-v2] Using ${provider.name} with model: ${model}`);
     
     const analysisPrompt = `Analyze this room image and provide a detailed JSON response with detected objects and renovation suggestions. Focus on identifying furniture, lighting, flooring, walls, and potential improvements.
