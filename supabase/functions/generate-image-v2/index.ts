@@ -268,7 +268,16 @@ async function generateWithHuggingFace(apiKey: string, model: string, prompt: st
 
     const imageBlob = await response.blob();
     const arrayBuffer = await imageBlob.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    
+    // Convert to base64 in chunks to avoid stack overflow
+    const uint8Array = new Uint8Array(arrayBuffer);
+    let binary = '';
+    const chunkSize = 8192; // Process 8KB at a time
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+      const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
+      binary += String.fromCharCode.apply(null, Array.from(chunk));
+    }
+    const base64 = btoa(binary);
     
     console.log(`[HuggingFace] Generation succeeded, image size: ${arrayBuffer.byteLength} bytes`);
     return { imageUrl: `data:image/png;base64,${base64}` };
