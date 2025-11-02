@@ -57,13 +57,13 @@ const AI_PROVIDERS: AIProvider[] = [
 
 const IMAGE_PROVIDERS: AIProvider[] = [
   {
-    id: 'HUGGINGFACE',
-    name: 'Hugging Face',
-    models: ['black-forest-labs/FLUX.1-schnell', 'black-forest-labs/FLUX.1-dev', 'stabilityai/stable-diffusion-xl-base-1.0'],
-    freeLimit: 100,
-    rateLimit: 10,
+    id: 'LOVABLE',
+    name: 'Lovable AI',
+    models: ['google/gemini-2.5-flash-image'],
+    freeLimit: 30,
+    rateLimit: 3,
     status: 'available',
-    description: 'Free FLUX & Stable Diffusion models - Best free option'
+    description: 'Built-in image editing - Best for preserving room structure ⭐'
   },
   {
     id: 'REPLICATE',
@@ -72,7 +72,16 @@ const IMAGE_PROVIDERS: AIProvider[] = [
     freeLimit: 50,
     rateLimit: 5,
     status: 'available',
-    description: 'High-quality image generation with FLUX'
+    description: 'High-quality img2img with FLUX - Good for transformations'
+  },
+  {
+    id: 'HUGGINGFACE',
+    name: 'Hugging Face',
+    models: ['black-forest-labs/FLUX.1-schnell', 'black-forest-labs/FLUX.1-dev', 'stabilityai/stable-diffusion-xl-base-1.0'],
+    freeLimit: 100,
+    rateLimit: 10,
+    status: 'available',
+    description: 'Free FLUX models - Limited img2img support'
   },
   {
     id: 'STABILITY',
@@ -81,16 +90,7 @@ const IMAGE_PROVIDERS: AIProvider[] = [
     freeLimit: 25,
     rateLimit: 5,
     status: 'available',
-    description: 'Professional SDXL models - High quality results'
-  },
-  {
-    id: 'LOVABLE',
-    name: 'Lovable AI',
-    models: ['google/gemini-2.5-flash-image'],
-    freeLimit: 30,
-    rateLimit: 3,
-    status: 'available',
-    description: 'Built-in image generation'
+    description: 'SDXL models - Text-to-image only (no editing)'
   }
 ];
 

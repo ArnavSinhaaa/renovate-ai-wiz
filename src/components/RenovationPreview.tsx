@@ -71,20 +71,24 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
         .map(s => s.suggestion)
         .slice(0, 5);
       
-      const prompt = suggestions.length > 0 
-        ? `Apply these renovations: ${suggestions.join(', ')}`
-        : 'Upgrade the room with modern improvements. Focus on wall paint and flooring/tile customization as specified.';
+      // Enhanced prompt for image editing that preserves structure
+      const editingPrompt = suggestions.length > 0 
+        ? `Transform this room by applying ONLY these changes while keeping the room layout, furniture positions, and architecture intact: ${suggestions.join(', ')}. Wall colors: ${Object.values(wallColors).map(w => w.name).join(', ')}. Flooring: ${flooring.name}. Tiles: ${tile.name}. IMPORTANT: Preserve the original room structure, lighting, and perspective. Only modify the specified elements. Keep the same camera angle and composition.`
+        : `Enhance this room with modern improvements while maintaining its original layout and structure. Apply these colors: ${Object.values(wallColors).map(w => w.name).join(', ')} to walls. Use ${flooring.name} flooring and ${tile.name} tiles. Keep all furniture positions and room architecture unchanged. Preserve lighting and perspective.`;
       
-      console.log('Generating room renovation preview...');
+      console.log('Generating room renovation preview with img2img...');
       
       const { data, error } = await supabase.functions.invoke('generate-image-v2', {
         body: {
-          prompt: `${prompt}. Apply these wall colors: ${Object.values(wallColors).map(w => w.name).join(', ')}. Use ${flooring.name} flooring and ${tile.name} tiles. Make it look realistic and beautiful.`,
+          prompt: editingPrompt,
           originalImage: imageBase64,
           selectedProvider: imageProvider,
           selectedModel: imageModel,
           width: 1024,
-          height: 1024
+          height: 1024,
+          // Control how much the image should change (0.3-0.8 range)
+          // Lower = more faithful to original, Higher = more creative changes
+          strength: 0.5 // Balanced preservation and transformation
         }
       });
 

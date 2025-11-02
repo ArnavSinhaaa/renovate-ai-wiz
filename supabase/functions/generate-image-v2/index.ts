@@ -14,7 +14,8 @@ const IMAGE_PROVIDERS = {
     models: ['black-forest-labs/FLUX.1-schnell', 'black-forest-labs/FLUX.1-dev', 'stabilityai/stable-diffusion-xl-base-1.0'],
     keyName: 'HUGGINGFACE_API_KEY',
     freeLimit: 100, // requests per month
-    rateLimit: 10 // requests per minute
+    rateLimit: 10, // requests per minute
+    supportsImg2Img: 'limited' // FLUX has limited img2img via Inference API
   },
   REPLICATE: {
     name: 'Replicate',
@@ -22,7 +23,8 @@ const IMAGE_PROVIDERS = {
     models: ['black-forest-labs/flux-schnell', 'stability-ai/sdxl'],
     keyName: 'REPLICATE_API_TOKEN',
     freeLimit: 50, // requests per month
-    rateLimit: 5 // requests per minute
+    rateLimit: 5, // requests per minute
+    supportsImg2Img: 'full' // Best for img2img transformations
   },
   STABILITY: {
     name: 'Stability AI',
@@ -30,7 +32,8 @@ const IMAGE_PROVIDERS = {
     models: ['stable-diffusion-xl-1024-v1-0', 'stable-diffusion-v1-6'],
     keyName: 'STABILITY_API_KEY',
     freeLimit: 25, // requests per month
-    rateLimit: 5 // requests per minute
+    rateLimit: 5, // requests per minute
+    supportsImg2Img: 'no' // Text-to-image only
   },
   LOVABLE: {
     name: 'Lovable AI',
@@ -38,7 +41,8 @@ const IMAGE_PROVIDERS = {
     models: ['google/gemini-2.5-flash-image'],
     keyName: 'LOVABLE_API_KEY',
     freeLimit: 30, // requests per day
-    rateLimit: 3 // requests per minute
+    rateLimit: 3, // requests per minute
+    supportsImg2Img: 'full' // Excellent for image editing and preservation
   }
 };
 
@@ -54,7 +58,8 @@ serve(async (req) => {
       selectedProvider = 'HUGGINGFACE', 
       selectedModel,
       width = 1024,
-      height = 1024
+      height = 1024,
+      strength = 0.5 // How much to transform the image (0.1 = subtle, 0.9 = major changes)
     } = await req.json();
     
     console.log(`[generate-image-v2] Request received:`, {
@@ -62,7 +67,9 @@ serve(async (req) => {
       model: selectedModel,
       hasImage: !!originalImage,
       promptLength: prompt?.length,
-      dimensions: `${width}x${height}`
+      dimensions: `${width}x${height}`,
+      strength: strength,
+      mode: originalImage ? 'img2img' : 'text2img'
     });
     
     if (!prompt) {
@@ -108,13 +115,13 @@ serve(async (req) => {
     let response;
     
     if (selectedProvider === 'REPLICATE') {
-      response = await generateWithReplicate(apiKey, model, prompt, originalImage, width, height);
+      response = await generateWithReplicate(apiKey, model, prompt, originalImage, width, height, strength);
     } else if (selectedProvider === 'HUGGINGFACE') {
-      response = await generateWithHuggingFace(apiKey, model, prompt, originalImage);
+      response = await generateWithHuggingFace(apiKey, model, prompt, originalImage, strength);
     } else if (selectedProvider === 'STABILITY') {
       response = await generateWithStability(apiKey, model, prompt, width, height);
     } else if (selectedProvider === 'LOVABLE') {
-      response = await generateWithLovable(apiKey, model, prompt, originalImage);
+      response = await generateWithLovable(apiKey, model, prompt, originalImage, strength);
     } else {
       throw new Error(`Provider ${selectedProvider} not implemented yet`);
     }
@@ -181,8 +188,8 @@ serve(async (req) => {
   }
 });
 
-async function generateWithReplicate(apiKey: string, model: string, prompt: string, originalImage?: string, width = 1024, height = 1024) {
-  console.log(`[Replicate] Starting generation with model: ${model}`);
+async function generateWithReplicate(apiKey: string, model: string, prompt: string, originalImage?: string, width = 1024, height = 1024, strength = 0.5) {
+  console.log(`[Replicate] Starting generation with model: ${model}, mode: ${originalImage ? 'img2img' : 'text2img'}`);
   try {
     const input: any = {
       prompt: prompt,
@@ -190,12 +197,13 @@ async function generateWithReplicate(apiKey: string, model: string, prompt: stri
       height: height,
       num_outputs: 1,
       guidance_scale: 7.5,
-      num_inference_steps: 4
+      num_inference_steps: originalImage ? 25 : 4 // More steps for img2img for quality
     };
 
     if (originalImage) {
       input.image = originalImage;
-      input.strength = 0.8;
+      input.strength = strength; // How much to transform (0.3-0.8 recommended)
+      console.log(`[Replicate] Using img2img mode with strength: ${strength}`);
     }
 
     const response = await fetch('https://api.replicate.com/v1/predictions', {
@@ -242,22 +250,40 @@ async function generateWithReplicate(apiKey: string, model: string, prompt: stri
   }
 }
 
-async function generateWithHuggingFace(apiKey: string, model: string, prompt: string, originalImage?: string) {
-  console.log(`[HuggingFace] Starting generation with model: ${model}`);
+async function generateWithHuggingFace(apiKey: string, model: string, prompt: string, originalImage?: string, strength = 0.5) {
+  console.log(`[HuggingFace] Starting generation with model: ${model}, mode: ${originalImage ? 'img2img' : 'text2img'}`);
+  
+  // HuggingFace Inference API doesn't support img2img for FLUX models well
+  // Recommend using Lovable AI or Replicate for image editing
+  if (originalImage) {
+    console.warn(`[HuggingFace] Warning: FLUX models via Inference API have limited img2img support. Consider using Lovable AI or Replicate instead.`);
+  }
+  
   try {
+    const requestBody: any = {
+      inputs: prompt,
+      parameters: {
+        guidance_scale: 7.5,
+        num_inference_steps: originalImage ? 25 : 20
+      }
+    };
+
+    // For models that support it, add image parameter
+    if (originalImage && model.includes('stable-diffusion')) {
+      requestBody.inputs = {
+        prompt: prompt,
+        image: originalImage,
+        strength: strength
+      };
+    }
+
     const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        inputs: prompt,
-        parameters: {
-          guidance_scale: 7.5,
-          num_inference_steps: 20
-        }
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
@@ -288,18 +314,23 @@ async function generateWithHuggingFace(apiKey: string, model: string, prompt: st
   }
 }
 
-async function generateWithLovable(apiKey: string, model: string, prompt: string, originalImage?: string) {
-  console.log(`[Lovable] Starting generation with model: ${model}`);
+async function generateWithLovable(apiKey: string, model: string, prompt: string, originalImage?: string, strength = 0.5) {
+  console.log(`[Lovable] Starting generation with model: ${model}, mode: ${originalImage ? 'img2img editing' : 'text2img'}`);
   try {
     const messages: any[] = [
       {
         role: 'user',
         content: originalImage ? [
-          { type: 'text', text: `Transform this room image: ${prompt}` },
+          { 
+            type: 'text', 
+            text: `EDIT this image to ${prompt}. IMPORTANT: Keep the original room structure, layout, furniture positions, and camera perspective. Only modify the specified elements like colors, materials, or decor. Strength of changes: ${Math.round(strength * 100)}%.` 
+          },
           { type: 'image_url', image_url: { url: originalImage } }
         ] : `Generate a room renovation image: ${prompt}`
       }
     ];
+
+    console.log(`[Lovable] Using ${originalImage ? 'image editing' : 'text generation'} mode with strength ${strength}`);
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
