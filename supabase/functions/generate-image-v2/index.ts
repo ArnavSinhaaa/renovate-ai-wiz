@@ -35,15 +35,9 @@ const IMAGE_PROVIDERS = {
     rateLimit: 5, // requests per minute
     supportsImg2Img: 'no' // Text-to-image only
   },
-  GOOGLE: {
-    name: 'Google Gemini',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models',
-    models: ['gemini-2.0-flash-exp', 'gemini-1.5-flash-002', 'gemini-1.5-pro-002'],
-    keyName: 'GOOGLE_AI_KEY',
-    freeLimit: 1500, // requests per day
-    rateLimit: 15, // requests per minute
-    supportsImg2Img: 'full' // Native image editing with excellent structure preservation
-  },
+  // Note: Google Gemini does NOT support image generation via API
+  // It only supports text generation and image analysis (vision)
+  // Use LOVABLE provider for image generation instead
   LOVABLE: {
     name: 'Lovable AI',
     endpoint: 'https://ai.gateway.lovable.dev/v1/chat/completions',
@@ -121,11 +115,23 @@ serve(async (req) => {
 
     const model = selectedModel || provider.models[0];
     
+    // Validation: Prevent using Google for image generation
+    if (selectedProvider === 'GOOGLE') {
+      console.error('[generate-image-v2] Error: Google Gemini does not support image generation');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Google Gemini does not support image generation. It only supports text generation and image analysis.',
+          provider: 'Google Gemini',
+          status: 'error',
+          suggestion: 'Please switch to Lovable AI (recommended), Replicate, Hugging Face, or Stability AI for image generation'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     let response;
     
-    if (selectedProvider === 'GOOGLE') {
-      response = await generateWithGoogle(apiKey, model, prompt, originalImage, strength);
-    } else if (selectedProvider === 'REPLICATE') {
+    if (selectedProvider === 'REPLICATE') {
       response = await generateWithReplicate(apiKey, model, prompt, originalImage, width, height, strength);
     } else if (selectedProvider === 'HUGGINGFACE') {
       response = await generateWithHuggingFace(apiKey, model, prompt, originalImage, strength);

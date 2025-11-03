@@ -57,22 +57,13 @@ const AI_PROVIDERS: AIProvider[] = [
 
 const IMAGE_PROVIDERS: AIProvider[] = [
   {
-    id: 'GOOGLE',
-    name: 'Google Gemini',
-    models: ['gemini-2.0-flash-exp'],
-    freeLimit: 1500,
-    rateLimit: 15,
-    status: 'available',
-    description: 'Native Gemini image editing - Excellent structure preservation ⭐'
-  },
-  {
     id: 'LOVABLE',
     name: 'Lovable AI',
     models: ['google/gemini-2.5-flash-image'],
     freeLimit: 30,
     rateLimit: 3,
     status: 'available',
-    description: 'Built-in image editing via Lovable gateway'
+    description: 'Built-in image editing via Lovable gateway - ⭐ Recommended for image generation'
   },
   {
     id: 'REPLICATE',

@@ -79,8 +79,8 @@ const Index = () => {
   // AI Provider settings - Default to Google Gemini for best accuracy
   const [analysisProvider, setAnalysisProvider] = useState('GOOGLE'); // Google Gemini for accurate object detection
   const [analysisModel, setAnalysisModel] = useState('gemini-2.0-flash-exp');
-  const [imageProvider, setImageProvider] = useState('GOOGLE'); // Google Gemini native API for best img2img
-  const [imageModel, setImageModel] = useState('gemini-2.0-flash-exp');
+  const [imageProvider, setImageProvider] = useState('LOVABLE'); // Lovable AI for image generation (Google doesn't support img generation)
+  const [imageModel, setImageModel] = useState('google/gemini-2.5-flash-image');
   const [providerStatus, setProviderStatus] = useState<{ [key: string]: string }>({});
 
   /**
@@ -323,7 +323,18 @@ const Index = () => {
             <BudgetPlanner budget={budget} cartItems={cartItems} onRemoveItem={handleRemoveItem} />
             
             {/* AI Renovation Preview - always available for easier experimentation */}
-            <RenovationPreview selectedSuggestions={cartItems} roomType={selectedRoom === 'all' ? undefined : selectedRoom} budget={budget} uploadedImage={uploadedImage} />
+            <RenovationPreview 
+              selectedSuggestions={cartItems} 
+              roomType={selectedRoom === 'all' ? undefined : selectedRoom} 
+              budget={budget} 
+              uploadedImage={uploadedImage}
+              imageProvider={imageProvider}
+              imageModel={imageModel}
+              providerStatus={providerStatus}
+              onProviderStatusUpdate={(provider, status) => {
+                setProviderStatus(prev => ({ ...prev, [provider]: status }));
+              }}
+            />
             
             {/* Image History - User's uploaded images (only show if database is available) */}
             {user && user.id !== 'offline-user' && <ImageHistory onImageSelect={(imageUrl, analysisData) => {

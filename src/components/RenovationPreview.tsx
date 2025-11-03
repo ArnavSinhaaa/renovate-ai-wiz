@@ -24,8 +24,8 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
   roomType,
   budget,
   uploadedImage,
-  imageProvider = 'GOOGLE',
-  imageModel = 'gemini-2.0-flash-exp',
+  imageProvider = 'LOVABLE',
+  imageModel = 'google/gemini-2.5-flash-image',
   providerStatus = {},
   onProviderStatusUpdate
 }) => {
