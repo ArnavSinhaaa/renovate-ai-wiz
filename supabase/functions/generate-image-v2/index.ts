@@ -35,6 +35,15 @@ const IMAGE_PROVIDERS = {
     rateLimit: 5, // requests per minute
     supportsImg2Img: 'no' // Text-to-image only
   },
+  GOOGLE: {
+    name: 'Google Gemini',
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models',
+    models: ['gemini-2.0-flash-exp', 'gemini-1.5-flash-002', 'gemini-1.5-pro-002'],
+    keyName: 'GOOGLE_AI_KEY',
+    freeLimit: 1500, // requests per day
+    rateLimit: 15, // requests per minute
+    supportsImg2Img: 'full' // Native image editing with excellent structure preservation
+  },
   LOVABLE: {
     name: 'Lovable AI',
     endpoint: 'https://ai.gateway.lovable.dev/v1/chat/completions',
@@ -114,7 +123,9 @@ serve(async (req) => {
     
     let response;
     
-    if (selectedProvider === 'REPLICATE') {
+    if (selectedProvider === 'GOOGLE') {
+      response = await generateWithGoogle(apiKey, model, prompt, originalImage, strength);
+    } else if (selectedProvider === 'REPLICATE') {
       response = await generateWithReplicate(apiKey, model, prompt, originalImage, width, height, strength);
     } else if (selectedProvider === 'HUGGINGFACE') {
       response = await generateWithHuggingFace(apiKey, model, prompt, originalImage, strength);
@@ -187,6 +198,134 @@ serve(async (req) => {
     );
   }
 });
+
+async function generateWithGoogle(apiKey: string, model: string, prompt: string, originalImage?: string, strength = 0.5) {
+  console.log(`[Google] Starting generation with model: ${model}, mode: ${originalImage ? 'img2img' : 'text2img'}`);
+  
+  try {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    
+    // Build the request for image editing
+    const parts: any[] = [];
+    
+    if (originalImage) {
+      // Extract base64 data and mime type
+      const base64Match = originalImage.match(/data:image\/(\w+);base64,(.+)/);
+      if (!base64Match) {
+        throw new Error('Invalid image format');
+      }
+      
+      const mimeType = `image/${base64Match[1]}`;
+      const base64Data = base64Match[2];
+      
+      // Add the original image first
+      parts.push({
+        inline_data: {
+          mime_type: mimeType,
+          data: base64Data
+        }
+      });
+      
+      // Enhanced prompt for image editing with structure preservation
+      const editPrompt = `EDIT this room image by applying these specific changes while preserving the original room structure:
+
+${prompt}
+
+CRITICAL INSTRUCTIONS FOR NATURAL IMAGE EDITING:
+1. PRESERVE ORIGINAL STRUCTURE:
+   - Keep exact same camera angle, viewpoint, and perspective
+   - Maintain all walls, windows, doors, and architectural elements in original positions
+   - Keep room dimensions and spatial layout identical
+   - Preserve furniture positions and arrangements
+
+2. MODIFY ONLY SPECIFIED ELEMENTS:
+   - Apply the requested color changes, materials, or decor updates
+   - Maintain realistic lighting that matches original image
+   - Ensure natural transitions between edited and preserved areas
+   - Keep depth perception and 3D space accurate
+
+3. QUALITY STANDARDS:
+   - Generate photorealistic results as if professionally renovated
+   - Maintain consistent lighting direction and shadows
+   - Preserve image quality and resolution
+   - Apply changes with ${Math.round(strength * 100)}% intensity
+
+4. DO NOT:
+   - Add or remove major structural elements
+   - Change room layout or dimensions
+   - Alter camera position or perspective
+   - Generate completely new images
+
+Apply the transformation naturally as if a professional interior designer edited the original photo.`;
+      
+      parts.push({
+        text: editPrompt
+      });
+    } else {
+      // Text-to-image generation
+      parts.push({
+        text: `Generate a high-quality, photorealistic interior design image: ${prompt}`
+      });
+    }
+    
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: parts
+        }],
+        generationConfig: {
+          temperature: 0.4, // Lower temperature for more consistent edits
+          topK: 32,
+          topP: 1,
+          maxOutputTokens: 4096,
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[Google] API error: ${response.status} - ${errorText}`);
+      
+      if (response.status === 429) {
+        return { error: 'Rate limit exceeded', status: 429 };
+      }
+      
+      return { error: `Google API error: ${response.status} - ${errorText}`, status: response.status };
+    }
+
+    const data = await response.json();
+    console.log('[Google] Response received');
+
+    // Extract the generated image from the response
+    const candidate = data.candidates?.[0];
+    if (!candidate?.content?.parts) {
+      console.error('[Google] Invalid response structure:', JSON.stringify(data).substring(0, 300));
+      return { error: 'No image generated in response' };
+    }
+
+    // Find the image part
+    const imagePart = candidate.content.parts.find((part: any) => part.inline_data);
+    if (!imagePart?.inline_data?.data) {
+      console.error('[Google] No image data found in parts');
+      return { error: 'No image data in response' };
+    }
+
+    const base64Image = imagePart.inline_data.data;
+    const mimeType = imagePart.inline_data.mime_type || 'image/png';
+    const imageUrl = `data:${mimeType};base64,${base64Image}`;
+
+    console.log(`[Google] Generation succeeded, image size: ${base64Image.length} bytes`);
+
+    return { imageUrl };
+  } catch (error) {
+    console.error('[Google] Generation failed:', error);
+    return { error: `Google Gemini generation failed: ${error.message}` };
+  }
+}
 
 async function generateWithReplicate(apiKey: string, model: string, prompt: string, originalImage?: string, width = 1024, height = 1024, strength = 0.5) {
   console.log(`[Replicate] Starting generation with model: ${model}, mode: ${originalImage ? 'img2img' : 'text2img'}`);

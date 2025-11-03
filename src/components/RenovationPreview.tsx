@@ -24,8 +24,8 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
   roomType,
   budget,
   uploadedImage,
-  imageProvider = 'HUGGINGFACE',
-  imageModel = 'black-forest-labs/FLUX.1-schnell',
+  imageProvider = 'GOOGLE',
+  imageModel = 'gemini-2.0-flash-exp',
   providerStatus = {},
   onProviderStatusUpdate
 }) => {
@@ -73,8 +73,8 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
       
       // Enhanced prompt for image editing that preserves structure
       const editingPrompt = suggestions.length > 0 
-        ? `Transform this room by applying ONLY these changes while keeping the room layout, furniture positions, and architecture intact: ${suggestions.join(', ')}. Wall colors: ${Object.values(wallColors).map(w => w.name).join(', ')}. Flooring: ${flooring.name}. Tiles: ${tile.name}. IMPORTANT: Preserve the original room structure, lighting, and perspective. Only modify the specified elements. Keep the same camera angle and composition.`
-        : `Enhance this room with modern improvements while maintaining its original layout and structure. Apply these colors: ${Object.values(wallColors).map(w => w.name).join(', ')} to walls. Use ${flooring.name} flooring and ${tile.name} tiles. Keep all furniture positions and room architecture unchanged. Preserve lighting and perspective.`;
+        ? `Apply these renovation changes to the room: ${suggestions.join(', ')}. Use ${Object.values(wallColors).map(w => w.name).join(', ')} for wall colors. Apply ${flooring.name} for flooring and ${tile.name} for tiles.`
+        : `Modernize this room with: ${Object.values(wallColors).map(w => w.name).join(', ')} wall colors, ${flooring.name} flooring, and ${tile.name} tiles.`;
       
       console.log('Generating room renovation preview with img2img...');
       
