@@ -24,14 +24,21 @@ interface WallColors {
 export interface FlooringOption { 
   type: string; 
   name: string; 
-  cost?: number; 
+  cost: number; 
 }
 
 export interface MaterialCosts { 
   walls: number; 
   flooring: number; 
   tiles: number; 
+  falseCeiling: number;
   total: number; 
+}
+
+export interface FalseCeilingOption {
+  type: string;
+  name: string;
+  cost: number;
 }
 
 interface Props {
@@ -41,6 +48,8 @@ interface Props {
   onFlooringChange: (f: FlooringOption) => void;
   tile: FlooringOption;
   onTileChange: (t: FlooringOption) => void;
+  falseCeiling?: FalseCeilingOption;
+  onFalseCeilingChange?: (fc: FalseCeilingOption) => void;
   onMaterialCostsChange?: (costs: MaterialCosts) => void;
 }
 
@@ -69,6 +78,15 @@ const TILE_OPTIONS: FlooringOption[] = [
   { type: 'granite', name: 'Granite', cost: 600 },
 ];
 
+const FALSE_CEILING_OPTIONS: FalseCeilingOption[] = [
+  { type: 'gypsum', name: 'Gypsum Board', cost: 250 },
+  { type: 'pop', name: 'POP (Plaster of Paris)', cost: 200 },
+  { type: 'pvc', name: 'PVC Panels', cost: 150 },
+  { type: 'wooden', name: 'Wooden Panels', cost: 600 },
+  { type: 'metal', name: 'Metal Grid', cost: 350 },
+  { type: 'fiber', name: 'Fiber Panels', cost: 180 },
+];
+
 export const WallColorCustomizer: React.FC<Props> = ({
   wallColors, 
   onWallColorsChange,
@@ -76,6 +94,8 @@ export const WallColorCustomizer: React.FC<Props> = ({
   onFlooringChange,
   tile, 
   onTileChange,
+  falseCeiling = { type: 'none', name: 'None', cost: 0 },
+  onFalseCeilingChange,
   onMaterialCostsChange
 }) => {
   const [selectedWall, setSelectedWall] = useState<WallSide>('front');
@@ -106,16 +126,18 @@ export const WallColorCustomizer: React.FC<Props> = ({
   const paintCost = paintableArea * PAINT_RATE;
   const flooringCost = (flooring.cost || 0) * (floorArea - tileArea);
   const tileCost = (tile.cost || 0) * tileArea;
-  const total = paintCost + flooringCost + tileCost;
+  const falseCeilingCost = (falseCeiling?.cost || 0) * floorArea;
+  const total = paintCost + flooringCost + tileCost + falseCeilingCost;
 
   useEffect(() => {
     onMaterialCostsChange?.({ 
       walls: paintCost, 
       flooring: flooringCost, 
-      tiles: tileCost, 
+      tiles: tileCost,
+      falseCeiling: falseCeilingCost,
       total 
     });
-  }, [paintCost, flooringCost, tileCost, total]);
+  }, [paintCost, flooringCost, tileCost, falseCeilingCost, total]);
 
   const handleCustomColorApply = () => {
     if (customColorName.trim()) {
@@ -216,10 +238,11 @@ export const WallColorCustomizer: React.FC<Props> = ({
 
       {/* Tabs for Color/Material Selection */}
       <Tabs defaultValue="walls">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="walls">Walls</TabsTrigger>
           <TabsTrigger value="flooring">Flooring</TabsTrigger>
           <TabsTrigger value="tiles">Tiles</TabsTrigger>
+          <TabsTrigger value="ceiling">Ceiling</TabsTrigger>
         </TabsList>
         
         <TabsContent value="walls" className="space-y-4">
@@ -318,6 +341,41 @@ export const WallColorCustomizer: React.FC<Props> = ({
                 <span>₹{o.cost}/m²</span>
               </Button>
             ))}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="ceiling">
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <h4 className="font-semibold mb-2 flex items-center gap-2 text-blue-900 dark:text-blue-100">
+                <Layers className="w-4 h-4" />
+                False Ceiling Options
+              </h4>
+              <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
+                Transform your space with stylish false ceiling designs. Prices are per m² of floor area.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              <Button 
+                variant={falseCeiling?.type === 'none' ? "default" : "outline"}
+                className="justify-between"
+                onClick={() => onFalseCeilingChange?.({ type: 'none', name: 'None', cost: 0 })}
+              >
+                <span>No False Ceiling</span>
+                <span>₹0</span>
+              </Button>
+              {FALSE_CEILING_OPTIONS.map(o => (
+                <Button 
+                  key={o.name}
+                  variant={falseCeiling?.name === o.name ? "default" : "outline"}
+                  className="justify-between"
+                  onClick={() => onFalseCeilingChange?.(o)}
+                >
+                  <span>{o.name}</span>
+                  <span>₹{o.cost}/m²</span>
+                </Button>
+              ))}
+            </div>
           </div>
         </TabsContent>
       </Tabs>
@@ -507,6 +565,12 @@ export const WallColorCustomizer: React.FC<Props> = ({
               <span>Tiles ({tileArea.toFixed(1)} m² × ₹{tile.cost})</span>
               <span>₹{tileCost.toLocaleString()}</span>
             </div>
+            {falseCeilingCost > 0 && (
+              <div className="flex justify-between">
+                <span>False Ceiling ({floorArea.toFixed(1)} m² × ₹{falseCeiling?.cost})</span>
+                <span>₹{falseCeilingCost.toLocaleString()}</span>
+              </div>
+            )}
             <hr />
             <div className="flex justify-between font-bold">
               <span>Total</span>

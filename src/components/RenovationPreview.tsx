@@ -37,8 +37,9 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
     right: { color: '#FFFFFF', name: 'Pure White' },
     front: { color: '#FFFFFF', name: 'Pure White' },
   });
-  const [flooring, setFlooring] = useState({ type: 'none', name: 'Original' });
-  const [tile, setTile] = useState({ type: 'none', name: 'Original' });
+  const [flooring, setFlooring] = useState({ type: 'none', name: 'Original', cost: 0 });
+  const [tile, setTile] = useState({ type: 'none', name: 'Original', cost: 0 });
+  const [falseCeiling, setFalseCeiling] = useState({ type: 'none', name: 'None', cost: 0 });
 
   const handleWallColorsChange = (colors: typeof wallColors) => {
     setWallColors(colors);
@@ -263,6 +264,12 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
               flooring={flooring}
               onTileChange={setTile}
               tile={tile}
+              falseCeiling={falseCeiling}
+              onFalseCeilingChange={setFalseCeiling}
+              onMaterialCostsChange={(costs) => {
+                // Material costs updated in real-time
+                console.log('Material costs updated:', costs);
+              }}
             />
             <div className="p-4 bg-muted/50 rounded-lg border">
               <p className="text-sm text-muted-foreground">

@@ -18,6 +18,7 @@ export interface MaterialCosts {
   walls: number;
   flooring: number;
   tiles: number;
+  falseCeiling: number;
   total: number;
 }
 
@@ -70,7 +71,8 @@ Cost Breakdown:
 - Renovations: ₹${renovationCost.toLocaleString()} (${cartItems.length} items)
 ${materialCosts ? `- Wall Paint: ₹${materialCosts.walls.toLocaleString()}
 - Flooring: ₹${materialCosts.flooring.toLocaleString()}
-- Tiles: ₹${materialCosts.tiles.toLocaleString()}` : ''}
+- Tiles: ₹${materialCosts.tiles.toLocaleString()}
+${materialCosts.falseCeiling > 0 ? `- False Ceiling: ₹${materialCosts.falseCeiling.toLocaleString()}` : ''}` : ''}
 
 Selected Items:
 ${cartItems.map((item, i) => `${i + 1}. ${item.suggestion} - ₹${item.cost.toLocaleString()} (${item.time}d)`).join('\n')}
@@ -283,6 +285,15 @@ ${cartItems.map((item, i) => `${i + 1}. ${item.suggestion} - ₹${item.cost.toLo
                         Tiles
                       </span>
                       <span className="font-bold text-orange-700">₹{materialCosts.tiles.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {materialCosts.falseCeiling > 0 && (
+                    <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-lg border border-blue-200 hover:shadow-sm transition-shadow">
+                      <span className="font-medium flex items-center gap-2">
+                        <Layers className="w-4 h-4 text-blue-600" />
+                        False Ceiling
+                      </span>
+                      <span className="font-bold text-blue-700">₹{materialCosts.falseCeiling.toLocaleString()}</span>
                     </div>
                   )}
                 </>

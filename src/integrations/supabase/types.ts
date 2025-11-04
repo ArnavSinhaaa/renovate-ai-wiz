@@ -1,13 +1,3 @@
-/**
- * Supabase Database Types
- * Auto-generated TypeScript types for the Supabase database schema
- * Provides type safety for all database operations
- */
-
-/**
- * JSON type definition for Supabase
- * Represents any valid JSON value that can be stored in the database
- */
 export type Json =
   | string
   | number
@@ -16,210 +6,310 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-/**
- * Main database schema type
- * Defines the structure of the entire Supabase database
- * @interface Database
- */
 export type Database = {
-  /**
-   * Internal Supabase metadata
-   * Used for version compatibility and client configuration
-   */
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    /** PostgREST API version for compatibility checks */
     PostgrestVersion: "13.0.4"
   }
-  
-  /**
-   * Public schema - the main database schema accessible to clients
-   * Contains all tables, views, functions, enums, and composite types
-   */
   public: {
-    /** Database tables - Fixfy application tables */
     Tables: {
-      users: {
+      bill_reminders: {
         Row: {
-          id: string
-          session_id: string
+          amount: number
           created_at: string
+          due_date: string
+          frequency: string
+          id: string
+          is_paid: boolean
+          title: string
           updated_at: string
+          user_id: string
         }
         Insert: {
-          id?: string
-          session_id: string
+          amount: number
           created_at?: string
+          due_date: string
+          frequency?: string
+          id?: string
+          is_paid?: boolean
+          title: string
           updated_at?: string
+          user_id: string
         }
         Update: {
-          id?: string
-          session_id?: string
+          amount?: number
           created_at?: string
+          due_date?: string
+          frequency?: string
+          id?: string
+          is_paid?: boolean
+          title?: string
           updated_at?: string
+          user_id?: string
         }
+        Relationships: []
       }
-      user_images: {
+      expense_categories: {
         Row: {
+          created_at: string
+          icon: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          date: string
+          description: string | null
           id: string
           user_id: string
-          image_url: string
-          image_name: string
-          image_size: number
-          image_type: string
-          uploaded_at: string
-          processed: boolean
         }
         Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          date?: string
+          description?: string | null
           id?: string
           user_id: string
-          image_url: string
-          image_name: string
-          image_size: number
-          image_type: string
-          uploaded_at?: string
-          processed?: boolean
         }
         Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          date?: string
+          description?: string | null
           id?: string
           user_id?: string
-          image_url?: string
-          image_name?: string
-          image_size?: number
-          image_type?: string
-          uploaded_at?: string
-          processed?: boolean
         }
+        Relationships: []
       }
-      analysis_results: {
+      financial_goals: {
         Row: {
+          category: string | null
+          created_at: string
+          current_amount: number
           id: string
+          target_amount: number
+          target_date: string | null
+          title: string
+          updated_at: string
           user_id: string
-          image_id: string
-          detected_objects: Json
-          analysis_confidence: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          current_amount?: number
+          id?: string
+          target_amount: number
+          target_date?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          current_amount?: number
+          id?: string
+          target_amount?: number
+          target_date?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      indirect_income_sources: {
+        Row: {
+          amount: number
+          created_at: string
+          frequency: string
+          id: string
+          income_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          frequency?: string
+          id?: string
+          income_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          frequency?: string
+          id?: string
+          income_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          annual_salary: number | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          annual_salary?: number | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          annual_salary?: number | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          achievement_type: string
+          description: string | null
+          earned_at: string
+          id: string
+          points: number
+          title: string
+          user_id: string
+        }
+        Insert: {
+          achievement_type: string
+          description?: string | null
+          earned_at?: string
+          id?: string
+          points?: number
+          title: string
+          user_id: string
+        }
+        Update: {
+          achievement_type?: string
+          description?: string | null
+          earned_at?: string
+          id?: string
+          points?: number
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_photos: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
           room_type: string | null
-          budget_range: string | null
-          analysis_completed_at: string
+          upload_timestamp: string
+          user_id: string
         }
         Insert: {
+          created_at?: string
           id?: string
-          user_id: string
-          image_id: string
-          detected_objects?: Json
-          analysis_confidence?: number
+          image_url: string
           room_type?: string | null
-          budget_range?: string | null
-          analysis_completed_at?: string
+          upload_timestamp?: string
+          user_id: string
         }
         Update: {
+          created_at?: string
           id?: string
-          user_id?: string
-          image_id?: string
-          detected_objects?: Json
-          analysis_confidence?: number
+          image_url?: string
           room_type?: string | null
-          budget_range?: string | null
-          analysis_completed_at?: string
-        }
-      }
-      renovation_suggestions: {
-        Row: {
-          id: string
-          analysis_id: string
-          suggestion_text: string
-          suggestion_type: string
-          estimated_cost: number | null
-          priority_score: number
-          is_selected: boolean
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          analysis_id: string
-          suggestion_text: string
-          suggestion_type: string
-          estimated_cost?: number | null
-          priority_score?: number
-          is_selected?: boolean
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          analysis_id?: string
-          suggestion_text?: string
-          suggestion_type?: string
-          estimated_cost?: number | null
-          priority_score?: number
-          is_selected?: boolean
-          created_at?: string
-        }
-      }
-      user_sessions: {
-        Row: {
-          id: string
-          user_id: string
-          session_data: Json
-          last_activity: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          session_data?: Json
-          last_activity?: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
+          upload_timestamp?: string
           user_id?: string
-          session_data?: Json
-          last_activity?: string
-          created_at?: string
         }
+        Relationships: []
+      }
+      user_stats: {
+        Row: {
+          current_streak: number
+          expenses_count: number
+          goals_completed: number
+          id: string
+          last_expense_date: string | null
+          longest_streak: number
+          total_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_streak?: number
+          expenses_count?: number
+          goals_completed?: number
+          id?: string
+          last_expense_date?: string | null
+          longest_streak?: number
+          total_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_streak?: number
+          expenses_count?: number
+          goals_completed?: number
+          id?: string
+          last_expense_date?: string | null
+          longest_streak?: number
+          total_points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
-    
-    /** Database views - currently empty (no views defined) */
     Views: {
       [_ in never]: never
     }
-    
-    /** Database functions - currently empty (no functions defined) */
     Functions: {
       [_ in never]: never
     }
-    
-    /** Database enums - currently empty (no enums defined) */
     Enums: {
       [_ in never]: never
     }
-    
-    /** Database composite types - currently empty (no composite types defined) */
     CompositeTypes: {
       [_ in never]: never
     }
   }
 }
 
-/**
- * Database type without internal Supabase metadata
- * Used for cleaner type definitions
- */
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-/**
- * Default schema type (currently 'public')
- * Extracted from the database structure
- */
 type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
-/**
- * Generic type for extracting table row types
- * Provides type safety for table data retrieval
- * @template DefaultSchemaTableNameOrOptions - Table name or schema options
- * @template TableName - Specific table name (inferred from options)
- * @returns The row type for the specified table
- */
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
@@ -249,13 +339,6 @@ export type Tables<
       : never
     : never
 
-/**
- * Generic type for extracting table insert types
- * Provides type safety for data insertion operations
- * @template DefaultSchemaTableNameOrOptions - Table name or schema options
- * @template TableName - Specific table name (inferred from options)
- * @returns The insert type for the specified table
- */
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
@@ -281,13 +364,6 @@ export type TablesInsert<
       : never
     : never
 
-/**
- * Generic type for extracting table update types
- * Provides type safety for data update operations
- * @template DefaultSchemaTableNameOrOptions - Table name or schema options
- * @template TableName - Specific table name (inferred from options)
- * @returns The update type for the specified table
- */
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
@@ -313,13 +389,6 @@ export type TablesUpdate<
       : never
     : never
 
-/**
- * Generic type for extracting database enum types
- * Provides type safety for enum values in database operations
- * @template DefaultSchemaEnumNameOrOptions - Enum name or schema options
- * @template EnumName - Specific enum name (inferred from options)
- * @returns The enum type for the specified enum
- */
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
@@ -337,13 +406,6 @@ export type Enums<
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
-/**
- * Generic type for extracting database composite types
- * Provides type safety for composite type values in database operations
- * @template PublicCompositeTypeNameOrOptions - Composite type name or schema options
- * @template CompositeTypeName - Specific composite type name (inferred from options)
- * @returns The composite type for the specified composite type
- */
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
@@ -361,14 +423,8 @@ export type CompositeTypes<
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
-/**
- * Database constants and metadata
- * Contains static information about the database schema
- */
 export const Constants = {
-  /** Public schema constants */
   public: {
-    /** Available enums in the public schema (currently empty) */
     Enums: {},
   },
 } as const

@@ -145,22 +145,63 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       return;
     }
 
+    // Check file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image size must be less than 10MB');
+      return;
+    }
+
     try {
       const imageUrl = URL.createObjectURL(file);
       onImageUpload(file);
 
+      // Upload to Supabase Storage
       try {
-        const savedImage = await saveImage({
-          imageUrl,
-          imageName: file.name,
-          imageSize: file.size,
-          imageType: file.type,
-        });
-        console.log('Image saved to database:', savedImage.id);
-        toast.success('Image uploaded successfully!');
-      } catch (dbError) {
-        console.warn('Database save failed:', dbError);
-        toast.success('Image uploaded! (Not saved to history)');
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          // Generate unique filename
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+          
+          // Upload to storage bucket
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('room-photos')
+            .upload(fileName, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+
+          if (uploadError) throw uploadError;
+
+          // Get public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('room-photos')
+            .getPublicUrl(fileName);
+
+          // Save to database
+          const { data: photoData, error: dbError } = await supabase
+            .from('user_photos')
+            .insert({
+              user_id: user.id,
+              image_url: publicUrl,
+              room_type: null, // Will be detected by AI
+              upload_timestamp: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+          if (dbError) throw dbError;
+
+          console.log('Image saved to storage and database:', photoData.id);
+          toast.success('✓ Image uploaded and saved successfully!');
+        } else {
+          // User not authenticated - just use local preview
+          toast.success('Image uploaded! (Sign in to save to history)');
+        }
+      } catch (storageError) {
+        console.error('Storage/Database save failed:', storageError);
+        toast.warning('Image uploaded but not saved to history');
       }
       
       await analyzeImage(file);
@@ -294,6 +335,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             src={uploadedImage} 
             alt="Uploaded room" 
             className="w-full h-[500px] object-cover"
+            loading="lazy"
           />
           
           {isAnalyzing && (

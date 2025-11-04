@@ -24,6 +24,8 @@ import { ImageHistory } from '@/components/ImageHistory';
 import { useAdManager } from '@/hooks/useAdManager';
 import { useUserSession } from '@/hooks/useUserSession';
 import { getFilteredSuggestions, RenovationSuggestion } from '@/data/renovationSuggestions';
+import { MaterialCosts, FalseCeilingOption } from '@/components/WallColorCustomizer';
+import { WallCustomizationPanel } from '@/components/WallCustomizationPanel';
 import { toast } from 'sonner';
 import heroImage from '@/assets/hero-renovation.jpg';
 
@@ -61,6 +63,22 @@ const Index = () => {
   const [cartItems, setCartItems] = useState<RenovationSuggestion[]>([]);
   const [filteredSuggestions, setFilteredSuggestions] = useState<RenovationSuggestion[]>([]);
   const [currentImageId, setCurrentImageId] = useState<string | null>(null);
+
+  // State for material costs tracking
+  const [materialCosts, setMaterialCosts] = useState<MaterialCosts>({
+    walls: 0,
+    flooring: 0,
+    tiles: 0,
+    falseCeiling: 0,
+    total: 0
+  });
+
+  // State for false ceiling
+  const [falseCeiling, setFalseCeiling] = useState<FalseCeilingOption>({
+    type: 'none',
+    name: 'None',
+    cost: 0
+  });
 
   // Ad management
   const adManager = useAdManager({
@@ -190,7 +208,7 @@ const Index = () => {
       <section className="relative overflow-hidden min-h-[600px]">
         {/* Background image with gradient overlays for visual appeal */}
         <div className="absolute inset-0">
-          <img src={heroImage} alt="Beautiful home renovation transformation" className="w-full h-full object-cover" />
+          <img src={heroImage} alt="Beautiful home renovation transformation" className="w-full h-full object-cover" loading="lazy" />
           {/* Primary gradient overlay for text readability */}
           <div className="absolute inset-0 bg-gradient-to-br from-purple-900/90 via-indigo-900/80 to-background/95" />
           {/* Secondary radial gradient for depth */}
@@ -295,6 +313,13 @@ const Index = () => {
             {/* Object Detection Results - Shows AI analysis findings */}
             <ObjectDetection detectedObjects={detectedObjects} isAnalyzing={isAnalyzing} />
 
+            {/* Wall Customization Panel - Material selection and costs */}
+            <WallCustomizationPanel 
+              onMaterialCostsChange={setMaterialCosts}
+              falseCeiling={falseCeiling}
+              onFalseCeilingChange={setFalseCeiling}
+            />
+
             {/* Content Ad - Between analysis and suggestions */}
             {adManager.canShowMoreAds() && !adManager.isLoading && <AdPlacement position="content" adType="adsense" />}
 
@@ -320,7 +345,12 @@ const Index = () => {
             {adManager.canShowMoreAds() && !adManager.isLoading && <AdPlacement position="sidebar" adType="adsense" />}
 
             {/* Budget Planner - Track costs and timeline */}
-            <BudgetPlanner budget={budget} cartItems={cartItems} onRemoveItem={handleRemoveItem} />
+            <BudgetPlanner 
+              budget={budget} 
+              cartItems={cartItems} 
+              onRemoveItem={handleRemoveItem}
+              materialCosts={materialCosts}
+            />
             
             {/* AI Renovation Preview - always available for easier experimentation */}
             <RenovationPreview 
