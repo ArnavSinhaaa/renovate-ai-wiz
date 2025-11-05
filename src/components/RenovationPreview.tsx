@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Wand2, Download, Sparkles } from 'lucide-react';
+import { Wand2, Download, Sparkles, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { RenovationSuggestion } from '@/data/renovationSuggestions';
-import { WallColorCustomizer } from './WallColorCustomizer';
+import { ImageComparisonSlider } from './ImageComparisonSlider';
+import { toast } from 'sonner';
 
 interface RenovationPreviewProps {
   selectedSuggestions: RenovationSuggestion[];
@@ -77,7 +77,12 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
         ? `Apply these renovation changes to the room: ${suggestions.join(', ')}. Use ${Object.values(wallColors).map(w => w.name).join(', ')} for wall colors. Apply ${flooring.name} for flooring and ${tile.name} for tiles.`
         : `Modernize this room with: ${Object.values(wallColors).map(w => w.name).join(', ')} wall colors, ${flooring.name} flooring, and ${tile.name} tiles.`;
       
-      console.log('Generating room renovation preview with img2img...');
+      console.log('🎨 Generating room renovation preview with img2img...');
+      console.log('⚠️ Credit Usage Warning: Using Lovable AI Gateway for image generation');
+      toast.info('Using AI credits for image generation', {
+        description: 'This will consume AI credits from your Lovable account',
+        duration: 4000
+      });
       
       const { data, error } = await supabase.functions.invoke('generate-image-v2', {
         body: {
@@ -85,13 +90,15 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
           originalImage: imageBase64,
           selectedProvider: imageProvider,
           selectedModel: imageModel,
-          width: 1024,
-          height: 1024,
+          width: 768, // Optimized for credit efficiency
+          height: 768, // Optimized for credit efficiency
           // Control how much the image should change (0.3-0.8 range)
           // Lower = more faithful to original, Higher = more creative changes
-          strength: 0.5 // Balanced preservation and transformation
+          strength: 0.45 // Optimized for credit efficiency while maintaining quality
         }
       });
+      
+      console.log('💳 Image generation completed - credits consumed');
 
       if (error) {
         console.error('Edge function error:', error);
@@ -125,8 +132,11 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
       }
       
       setGeneratedImage(data.imageUrl);
-      setGenerationPrompt(data.prompt || prompt);
-      console.log('Image generated successfully');
+      setGenerationPrompt(data.prompt || editingPrompt);
+      console.log('✅ Image generated successfully');
+      toast.success('Renovation preview generated!', {
+        description: 'Your AI-generated preview is ready'
+      });
     } catch (error) {
       console.error('Failed to generate renovation preview:', error);
       alert(`❌ Unexpected Error\n\n${error.message || error}\n\nPlease:\n1. Check console for details\n2. Verify edge function is deployed\n3. Check Supabase edge function logs\n4. Try a different provider`);
@@ -213,24 +223,12 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
           </div>
         ) : (
           <div className="space-y-4 animate-fade-in">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium mb-2">Before</p>
-                <img 
-                  src={uploadedImage} 
-                  alt="Original Room" 
-                  className="w-full rounded-lg shadow-soft"
-                />
-              </div>
-              <div>
-                <p className="text-sm font-medium mb-2">After (AI Renovation)</p>
-                <img
-                  src={generatedImage} 
-                  alt="AI Edited Renovation Preview" 
-                  className="w-full rounded-lg shadow-soft hover:shadow-warm transition-shadow duration-300"
-                />
-              </div>
-            </div>
+            <ImageComparisonSlider
+              beforeImage={uploadedImage}
+              afterImage={generatedImage}
+              beforeLabel="Before"
+              afterLabel="After (AI Renovation)"
+            />
             <div className="flex gap-2">
               <Button onClick={downloadImage} variant="outline" className="flex-1">
                 <Download className="w-4 h-4 mr-2" />

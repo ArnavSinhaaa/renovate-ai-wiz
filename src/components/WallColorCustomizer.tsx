@@ -24,7 +24,8 @@ interface WallColors {
 export interface FlooringOption { 
   type: string; 
   name: string; 
-  cost: number; 
+  cost: number;
+  duration?: number; // Duration in days
 }
 
 export interface MaterialCosts { 
@@ -39,6 +40,7 @@ export interface FalseCeilingOption {
   type: string;
   name: string;
   cost: number;
+  duration?: number; // Duration in days
 }
 
 interface Props {
@@ -54,6 +56,7 @@ interface Props {
 }
 
 const PRESET_COLORS: WallColor[] = [
+  { name: 'No Paint (Original)', hex: 'transparent' },
   { name: 'Pure White', hex: '#FFFFFF' },
   { name: 'Cream', hex: '#FFFDD0' },
   { name: 'Soft Gray', hex: '#D3D3D3' },
@@ -65,29 +68,28 @@ const PRESET_COLORS: WallColor[] = [
 ];
 
 const FLOORING_OPTIONS: FlooringOption[] = [
-  { type: 'none', name: 'None (Original)', cost: 0 },
-  { type: 'laminate', name: 'Laminate', cost: 200 },
-  { type: 'hardwood', name: 'Hardwood', cost: 500 },
-  { type: 'vinyl', name: 'Vinyl', cost: 150 },
-  { type: 'carpet', name: 'Carpet', cost: 180 },
+  { type: 'none', name: 'None (Original)', cost: 0, duration: 0 },
+  { type: 'laminate', name: 'Laminate', cost: 200, duration: 2 },
+  { type: 'hardwood', name: 'Hardwood', cost: 500, duration: 4 },
+  { type: 'vinyl', name: 'Vinyl', cost: 150, duration: 1 },
+  { type: 'carpet', name: 'Carpet', cost: 180, duration: 2 },
 ];
 
 const TILE_OPTIONS: FlooringOption[] = [
-  { type: 'none', name: 'None (Original)', cost: 0 },
-  { type: 'ceramic', name: 'Ceramic', cost: 300 },
-  { type: 'porcelain', name: 'Porcelain', cost: 450 },
-  { type: 'marble', name: 'Marble', cost: 800 },
-  { type: 'granite', name: 'Granite', cost: 600 },
+  { type: 'none', name: 'None (Original)', cost: 0, duration: 0 },
+  { type: 'ceramic', name: 'Ceramic', cost: 300, duration: 3 },
+  { type: 'porcelain', name: 'Porcelain', cost: 450, duration: 4 },
+  { type: 'marble', name: 'Marble', cost: 800, duration: 5 },
+  { type: 'granite', name: 'Granite', cost: 600, duration: 4 },
 ];
 
 const FALSE_CEILING_OPTIONS: FalseCeilingOption[] = [
-  { type: 'none', name: 'None', cost: 0 },
-  { type: 'gypsum', name: 'Gypsum Board', cost: 250 },
-  { type: 'pop', name: 'POP (Plaster of Paris)', cost: 200 },
-  { type: 'pvc', name: 'PVC Panels', cost: 150 },
-  { type: 'wooden', name: 'Wooden Panels', cost: 600 },
-  { type: 'metal', name: 'Metal Grid', cost: 350 },
-  { type: 'fiber', name: 'Fiber Panels', cost: 180 },
+  { type: 'gypsum', name: 'Gypsum Board', cost: 250, duration: 3 },
+  { type: 'pop', name: 'POP (Plaster of Paris)', cost: 200, duration: 4 },
+  { type: 'pvc', name: 'PVC Panels', cost: 150, duration: 2 },
+  { type: 'wooden', name: 'Wooden Panels', cost: 600, duration: 5 },
+  { type: 'metal', name: 'Metal Grid', cost: 350, duration: 3 },
+  { type: 'fiber', name: 'Fiber Panels', cost: 180, duration: 2 },
 ];
 
 export const WallColorCustomizer: React.FC<Props> = ({
@@ -321,11 +323,14 @@ export const WallColorCustomizer: React.FC<Props> = ({
               <Button 
                 key={o.name}
                 variant={flooring.name === o.name ? "default" : "outline"}
-                className="justify-between"
+                className="justify-between h-auto py-3"
                 onClick={() => onFlooringChange(o)}
               >
                 <span>{o.name}</span>
-                <span>₹{o.cost}/m²</span>
+                <div className="flex flex-col items-end">
+                  <span className="font-semibold">₹{o.cost}/m²</span>
+                  {o.duration ? <span className="text-xs opacity-70">{o.duration} days</span> : null}
+                </div>
               </Button>
             ))}
           </div>
@@ -337,11 +342,14 @@ export const WallColorCustomizer: React.FC<Props> = ({
               <Button 
                 key={o.name}
                 variant={tile.name === o.name ? "default" : "outline"}
-                className="justify-between"
+                className="justify-between h-auto py-3"
                 onClick={() => onTileChange(o)}
               >
                 <span>{o.name}</span>
-                <span>₹{o.cost}/m²</span>
+                <div className="flex flex-col items-end">
+                  <span className="font-semibold">₹{o.cost}/m²</span>
+                  {o.duration ? <span className="text-xs opacity-70">{o.duration} days</span> : null}
+                </div>
               </Button>
             ))}
           </div>
@@ -361,21 +369,27 @@ export const WallColorCustomizer: React.FC<Props> = ({
             <div className="grid grid-cols-1 gap-2">
               <Button 
                 variant={falseCeiling?.type === 'none' ? "default" : "outline"}
-                className="justify-between"
-                onClick={() => onFalseCeilingChange?.({ type: 'none', name: 'None', cost: 0 })}
+                className="justify-between h-auto py-3"
+                onClick={() => onFalseCeilingChange?.({ type: 'none', name: 'None', cost: 0, duration: 0 })}
               >
                 <span>No False Ceiling</span>
-                <span>₹0</span>
+                <div className="flex flex-col items-end">
+                  <span className="font-semibold">₹0</span>
+                  <span className="text-xs opacity-70">0 days</span>
+                </div>
               </Button>
               {FALSE_CEILING_OPTIONS.map(o => (
                 <Button 
                   key={o.name}
                   variant={falseCeiling?.name === o.name ? "default" : "outline"}
-                  className="justify-between"
+                  className="justify-between h-auto py-3"
                   onClick={() => onFalseCeilingChange?.(o)}
                 >
                   <span>{o.name}</span>
-                  <span>₹{o.cost}/m²</span>
+                  <div className="flex flex-col items-end">
+                    <span className="font-semibold">₹{o.cost}/m²</span>
+                    {o.duration ? <span className="text-xs opacity-70">{o.duration} days</span> : null}
+                  </div>
                 </Button>
               ))}
             </div>
