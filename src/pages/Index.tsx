@@ -89,7 +89,7 @@ const Index = () => {
 
   // User session management
   const {
-    user,
+    userId,
     isLoading: userLoading,
     error: userError
   } = useUserSession();
@@ -366,13 +366,9 @@ const Index = () => {
               }}
             />
             
-            {/* Image History - User's uploaded images (only show if database is available) */}
-            {user && user.id !== 'offline-user' && <ImageHistory onImageSelect={(imageUrl, analysisData) => {
+            {/* Image History - User's uploaded images (only show if authenticated) */}
+            {userId && <ImageHistory onImageSelect={(imageUrl) => {
             setUploadedImage(imageUrl);
-            if (analysisData) {
-              setDetectedObjects(analysisData.detected_objects as any[] || []);
-              // You could also load previous suggestions here
-            }
           }} />}
           </div>
         </div>

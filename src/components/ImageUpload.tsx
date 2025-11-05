@@ -49,7 +49,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // User session hook for database operations
-  const { saveImage, saveAnalysis, saveSuggestions } = useUserSession();
+  const { savePhoto, userId } = useUserSession();
 
   /**
    * Converts a file to base64 string for API transmission
@@ -102,26 +102,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
       const detectedObjects = data.detectedObjects || [];
       
-      
-      if (currentImageId) {
-        try {
-          const analysisResult = await saveAnalysis({
-            imageId: currentImageId,
-            detectedObjects,
-            analysisConfidence: data.confidence || 0.8,
-            roomType: data.roomType,
-            budgetRange: data.budgetRange,
-          });
-          
-          if (data.suggestions && data.suggestions.length > 0) {
-            await saveSuggestions(data.suggestions, analysisResult.id);
-          }
-          
-          console.log('Analysis saved to database:', analysisResult.id);
-        } catch (dbError) {
-          console.warn('Failed to save analysis to database:', dbError);
-        }
-      }
+      // Analysis complete
+      console.log('Analysis completed successfully with', detectedObjects.length, 'objects detected');
       
       onAnalysisComplete(detectedObjects);
     } catch (error) {

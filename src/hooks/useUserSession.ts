@@ -4,21 +4,16 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { 
-  generateSessionId, 
-  getOrCreateUser, 
-  saveUserImage, 
-  getUserImages,
-  saveAnalysisResult,
-  getUserAnalysisResults,
-  saveRenovationSuggestions,
-  getUserStats,
-  type User,
-  type UserImage,
-  type AnalysisResult
+  generateSessionId,
+  saveUserPhoto,
+  getUserPhotos,
+  deleteUserPhoto,
+  type UserPhoto
 } from '@/services/database';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UserSessionState {
-  user: User | null;
+  userId: string | null;
   sessionId: string | null;
   isLoading: boolean;
   error: string | null;
@@ -26,28 +21,9 @@ interface UserSessionState {
 
 interface UserSessionActions {
   initializeSession: () => Promise<void>;
-  saveImage: (imageData: {
-    imageUrl: string;
-    imageName: string;
-    imageSize: number;
-    imageType: string;
-  }) => Promise<UserImage>;
-  getUserImages: () => Promise<UserImage[]>;
-  saveAnalysis: (analysisData: {
-    imageId: string;
-    detectedObjects: any[];
-    analysisConfidence: number;
-    roomType?: string;
-    budgetRange?: string;
-  }) => Promise<AnalysisResult>;
-  getUserAnalyses: () => Promise<AnalysisResult[]>;
-  saveSuggestions: (suggestions: any[], analysisId: string) => Promise<void>;
-  getUserStats: () => Promise<{
-    totalImages: number;
-    totalAnalyses: number;
-    totalSuggestions: number;
-    lastActivity: string | null;
-  }>;
+  savePhoto: (photoData: { imageUrl: string; roomType?: string }) => Promise<UserPhoto>;
+  getUserPhotos: () => Promise<UserPhoto[]>;
+  deletePhoto: (photoId: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -56,7 +32,7 @@ interface UserSessionActions {
  * @returns User session state and actions
  */
 export const useUserSession = (): UserSessionState & UserSessionActions => {
-  const [user, setUser] = useState<User | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,28 +45,24 @@ export const useUserSession = (): UserSessionState & UserSessionActions => {
       setIsLoading(true);
       setError(null);
 
-      // Get or create session ID
-      let currentSessionId = sessionId;
-      if (!currentSessionId) {
-        currentSessionId = generateSessionId();
-        setSessionId(currentSessionId);
-        localStorage.setItem('fixfy_session_id', currentSessionId);
+      // Get current user from Supabase auth
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        console.warn('No authenticated user:', authError);
+        setError('Please sign in to continue');
+        return;
       }
 
-      // Try to get or create user (optional - works without DB)
-      try {
-        const userData = await getOrCreateUser(currentSessionId);
-        setUser(userData);
-        console.log('User session initialized:', userData.id);
-      } catch (dbError) {
-        console.warn('Database connection failed, continuing without persistence:', dbError);
-        // Create a mock user for offline functionality
-        setUser({
-          id: 'offline-user',
-          session_id: currentSessionId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
+      if (user) {
+        setUserId(user.id);
+        // Generate session ID if needed
+        let currentSessionId = sessionId;
+        if (!currentSessionId) {
+          currentSessionId = generateSessionId();
+          setSessionId(currentSessionId);
+          localStorage.setItem('fixfy_session_id', currentSessionId);
+        }
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to initialize session';
@@ -102,141 +74,58 @@ export const useUserSession = (): UserSessionState & UserSessionActions => {
   }, [sessionId]);
 
   /**
-   * Save uploaded image
+   * Save uploaded photo
    */
-  const saveImage = useCallback(async (imageData: {
+  const savePhoto = useCallback(async (photoData: {
     imageUrl: string;
-    imageName: string;
-    imageSize: number;
-    imageType: string;
-  }): Promise<UserImage> => {
-    if (!user) {
-      throw new Error('User not initialized');
-    }
-
-    try {
-      setError(null);
-      const savedImage = await saveUserImage(user.id, imageData);
-      return savedImage;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save image';
-      setError(errorMessage);
-      // If it's a database connection error, throw a specific error
-      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
-        throw new Error('Database connection failed');
-      }
-      throw err;
-    }
-  }, [user]);
-
-  /**
-   * Get user images
-   */
-  const getUserImagesList = useCallback(async (): Promise<UserImage[]> => {
-    if (!user) {
-      throw new Error('User not initialized');
-    }
-
-    try {
-      setError(null);
-      return await getUserImages(user.id);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch images';
-      setError(errorMessage);
-      throw err;
-    }
-  }, [user]);
-
-  /**
-   * Save analysis results
-   */
-  const saveAnalysis = useCallback(async (analysisData: {
-    imageId: string;
-    detectedObjects: any[];
-    analysisConfidence: number;
     roomType?: string;
-    budgetRange?: string;
-  }): Promise<AnalysisResult> => {
-    if (!user) {
-      throw new Error('User not initialized');
+  }): Promise<UserPhoto> => {
+    if (!userId) {
+      throw new Error('User not authenticated');
     }
 
     try {
       setError(null);
-      const savedAnalysis = await saveAnalysisResult({
-        user_id: user.id,
-        image_id: analysisData.imageId,
-        detected_objects: analysisData.detectedObjects,
-        analysis_confidence: analysisData.analysisConfidence,
-        room_type: analysisData.roomType || null,
-        budget_range: analysisData.budgetRange || null,
-      });
-      return savedAnalysis;
+      const savedPhoto = await saveUserPhoto(userId, photoData);
+      return savedPhoto;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save analysis';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save photo';
       setError(errorMessage);
       throw err;
     }
-  }, [user]);
+  }, [userId]);
 
   /**
-   * Get user analyses
+   * Get user photos
    */
-  const getUserAnalyses = useCallback(async (): Promise<AnalysisResult[]> => {
-    if (!user) {
-      throw new Error('User not initialized');
+  const getUserPhotosList = useCallback(async (): Promise<UserPhoto[]> => {
+    if (!userId) {
+      throw new Error('User not authenticated');
     }
 
     try {
       setError(null);
-      return await getUserAnalysisResults(user.id);
+      return await getUserPhotos(userId);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch analyses';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch photos';
       setError(errorMessage);
       throw err;
     }
-  }, [user]);
+  }, [userId]);
 
   /**
-   * Save renovation suggestions
+   * Delete photo
    */
-  const saveSuggestions = useCallback(async (suggestions: any[], analysisId: string): Promise<void> => {
+  const deletePhoto = useCallback(async (photoId: string): Promise<void> => {
     try {
       setError(null);
-      const suggestionData = suggestions.map(suggestion => ({
-        analysis_id: analysisId,
-        suggestion_text: suggestion.suggestion || suggestion.text,
-        suggestion_type: suggestion.type || 'general',
-        estimated_cost: suggestion.cost || suggestion.estimatedCost || null,
-        priority_score: suggestion.priority || 0,
-        is_selected: false,
-      }));
-
-      await saveRenovationSuggestions(suggestionData);
+      await deleteUserPhoto(photoId);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save suggestions';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete photo';
       setError(errorMessage);
       throw err;
     }
   }, []);
-
-  /**
-   * Get user statistics
-   */
-  const getUserStatsData = useCallback(async () => {
-    if (!user) {
-      throw new Error('User not initialized');
-    }
-
-    try {
-      setError(null);
-      return await getUserStats(user.id);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch stats';
-      setError(errorMessage);
-      throw err;
-    }
-  }, [user]);
 
   /**
    * Clear error state
@@ -258,22 +147,18 @@ export const useUserSession = (): UserSessionState & UserSessionActions => {
 
   return {
     // State
-    user,
+    userId,
     sessionId,
     isLoading,
     error,
     
     // Actions
     initializeSession,
-    saveImage,
-    getUserImages: getUserImagesList,
-    saveAnalysis,
-    getUserAnalyses,
-    saveSuggestions,
-    getUserStats: getUserStatsData,
+    savePhoto,
+    getUserPhotos: getUserPhotosList,
+    deletePhoto,
     clearError,
   };
 };
 
 export default useUserSession;
-
