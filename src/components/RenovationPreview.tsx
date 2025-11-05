@@ -164,13 +164,6 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Tabs defaultValue="preview" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="preview">Preview</TabsTrigger>
-            <TabsTrigger value="colors">Wall Colors</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="preview" className="space-y-4">
         {!generatedImage ? (
           <div className="text-center space-y-4">
             <div className="w-16 h-16 mx-auto rounded-full bg-gradient-sage flex items-center justify-center">
@@ -254,30 +247,6 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
             )}
           </div>
         )}
-          </TabsContent>
-          
-          <TabsContent value="colors" className="space-y-4">
-            <WallColorCustomizer
-              onWallColorsChange={handleWallColorsChange}
-              wallColors={wallColors}
-              onFlooringChange={setFlooring}
-              flooring={flooring}
-              onTileChange={setTile}
-              tile={tile}
-              falseCeiling={falseCeiling}
-              onFalseCeilingChange={setFalseCeiling}
-              onMaterialCostsChange={(costs) => {
-                // Material costs updated in real-time
-                console.log('Material costs updated:', costs);
-              }}
-            />
-            <div className="p-4 bg-muted/50 rounded-lg border">
-              <p className="text-sm text-muted-foreground">
-                💡 <strong>Tip:</strong> Customize walls, flooring, and tiles, then generate your renovation preview to see the complete transformation!
-              </p>
-            </div>
-          </TabsContent>
-        </Tabs>
       </CardContent>
     </Card>
   );

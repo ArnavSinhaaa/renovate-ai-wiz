@@ -121,11 +121,20 @@ const Index = () => {
     setDetectedObjects(objects);
 
     // Get renovation suggestions based on detected objects
-    const objectNames = objects.map(obj => obj.name);
+    const objectNames = objects.map(obj => obj.name.toLowerCase());
     const suggestions = getFilteredSuggestions(objectNames, budget, selectedRoom === 'all' ? undefined : selectedRoom);
-    setFilteredSuggestions(suggestions);
+    
+    // Filter to show only suggestions matching detected objects
+    const relevantSuggestions = suggestions.filter(suggestion => 
+      objectNames.some(objName => 
+        suggestion.trigger.toLowerCase().includes(objName) ||
+        objName.includes(suggestion.trigger.toLowerCase())
+      )
+    );
+    
+    setFilteredSuggestions(relevantSuggestions.length > 0 ? relevantSuggestions : suggestions.slice(0, 6));
     setIsAnalyzing(false);
-    toast.success('Room analysis complete! Check out the renovation suggestions below.');
+    toast.success(`Room analysis complete! Found ${relevantSuggestions.length} matching suggestions.`);
   }, [budget, selectedRoom]);
 
   /**
@@ -175,9 +184,17 @@ const Index = () => {
     const newBudget = parseInt(value) || 0;
     setBudget(newBudget);
     if (detectedObjects.length > 0) {
-      const objectNames = detectedObjects.map(obj => obj.name);
+      const objectNames = detectedObjects.map(obj => obj.name.toLowerCase());
       const suggestions = getFilteredSuggestions(objectNames, newBudget, selectedRoom === 'all' ? undefined : selectedRoom);
-      setFilteredSuggestions(suggestions);
+      
+      const relevantSuggestions = suggestions.filter(suggestion => 
+        objectNames.some(objName => 
+          suggestion.trigger.toLowerCase().includes(objName) ||
+          objName.includes(suggestion.trigger.toLowerCase())
+        )
+      );
+      
+      setFilteredSuggestions(relevantSuggestions.length > 0 ? relevantSuggestions : suggestions.slice(0, 6));
     }
   }, [detectedObjects, selectedRoom]);
 
@@ -188,9 +205,17 @@ const Index = () => {
   const handleRoomChange = useCallback((room: string) => {
     setSelectedRoom(room);
     if (detectedObjects.length > 0) {
-      const objectNames = detectedObjects.map(obj => obj.name);
+      const objectNames = detectedObjects.map(obj => obj.name.toLowerCase());
       const suggestions = getFilteredSuggestions(objectNames, budget, room === 'all' ? undefined : room);
-      setFilteredSuggestions(suggestions);
+      
+      const relevantSuggestions = suggestions.filter(suggestion => 
+        objectNames.some(objName => 
+          suggestion.trigger.toLowerCase().includes(objName) ||
+          objName.includes(suggestion.trigger.toLowerCase())
+        )
+      );
+      
+      setFilteredSuggestions(relevantSuggestions.length > 0 ? relevantSuggestions : suggestions.slice(0, 6));
     }
   }, [detectedObjects, budget]);
   return <div className="min-h-screen bg-background">
@@ -329,6 +354,11 @@ const Index = () => {
                   <CardTitle className="flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-primary" />
                     Renovation Suggestions ({filteredSuggestions.length})
+                    {detectedObjects.length > 0 && (
+                      <span className="text-sm font-normal text-muted-foreground">
+                        - Based on detected objects
+                      </span>
+                    )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>

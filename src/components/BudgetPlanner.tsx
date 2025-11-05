@@ -250,50 +250,50 @@ ${cartItems.map((item, i) => `${i + 1}. ${item.suggestion} - ₹${item.cost.toLo
           {showDetails && (
             <div className="space-y-2 text-sm">
               {cartItems.length > 0 && (
-                <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg border border-blue-600 hover:shadow-sm transition-shadow">
-                  <span className="font-medium flex items-center gap-2 text-white">
-                    <TrendingUp className="w-4 h-4 text-white" />
+                <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 hover:shadow-sm transition-shadow">
+                  <span className="font-medium flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-primary" />
                     Renovations ({cartItems.length} items)
                   </span>
-                  <span className="font-bold text-white">₹{renovationCost.toLocaleString()}</span>
+                  <span className="font-bold text-primary">₹{renovationCost.toLocaleString()}</span>
                 </div>
               )}
               {materialCosts && materialCosts.total > 0 && (
                 <>
                   {materialCosts.walls > 0 && (
-                    <div className="flex justify-between items-center p-3 bg-gradient-to-r from-purple-50 to-purple-100/50 rounded-lg border border-purple-200 hover:shadow-sm transition-shadow">
+                    <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/20 hover:shadow-sm transition-shadow">
                       <span className="font-medium flex items-center gap-2">
-                        <Palette className="w-4 h-4 text-purple-600" />
+                        <Palette className="w-4 h-4 text-secondary-foreground" />
                         Wall Paint
                       </span>
-                      <span className="font-bold text-purple-700">₹{materialCosts.walls.toLocaleString()}</span>
+                      <span className="font-bold">₹{materialCosts.walls.toLocaleString()}</span>
                     </div>
                   )}
                   {materialCosts.flooring > 0 && (
-                    <div className="flex justify-between items-center p-3 bg-gradient-to-r from-green-50 to-green-100/50 rounded-lg border border-green-200 hover:shadow-sm transition-shadow">
+                    <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 hover:shadow-sm transition-shadow">
                       <span className="font-medium flex items-center gap-2">
-                        <Layers className="w-4 h-4 text-green-600" />
+                        <Layers className="w-4 h-4 text-accent-foreground" />
                         Flooring
                       </span>
-                      <span className="font-bold text-green-700">₹{materialCosts.flooring.toLocaleString()}</span>
+                      <span className="font-bold">₹{materialCosts.flooring.toLocaleString()}</span>
                     </div>
                   )}
                   {materialCosts.tiles > 0 && (
-                    <div className="flex justify-between items-center p-3 bg-gradient-to-r from-orange-50 to-orange-100/50 rounded-lg border border-orange-200 hover:shadow-sm transition-shadow">
+                    <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-br from-muted/30 to-muted/50 border border-muted hover:shadow-sm transition-shadow">
                       <span className="font-medium flex items-center gap-2">
-                        <Square className="w-4 h-4 text-orange-600" />
+                        <Square className="w-4 h-4 text-foreground" />
                         Tiles
                       </span>
-                      <span className="font-bold text-orange-700">₹{materialCosts.tiles.toLocaleString()}</span>
+                      <span className="font-bold">₹{materialCosts.tiles.toLocaleString()}</span>
                     </div>
                   )}
                   {materialCosts.falseCeiling > 0 && (
-                    <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-lg border border-blue-200 hover:shadow-sm transition-shadow">
+                    <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 hover:shadow-sm transition-shadow">
                       <span className="font-medium flex items-center gap-2">
-                        <Layers className="w-4 h-4 text-blue-600" />
+                        <Layers className="w-4 h-4 text-primary" />
                         False Ceiling
                       </span>
-                      <span className="font-bold text-blue-700">₹{materialCosts.falseCeiling.toLocaleString()}</span>
+                      <span className="font-bold text-primary">₹{materialCosts.falseCeiling.toLocaleString()}</span>
                     </div>
                   )}
                 </>

@@ -65,6 +65,7 @@ const PRESET_COLORS: WallColor[] = [
 ];
 
 const FLOORING_OPTIONS: FlooringOption[] = [
+  { type: 'none', name: 'None (Original)', cost: 0 },
   { type: 'laminate', name: 'Laminate', cost: 200 },
   { type: 'hardwood', name: 'Hardwood', cost: 500 },
   { type: 'vinyl', name: 'Vinyl', cost: 150 },
@@ -72,6 +73,7 @@ const FLOORING_OPTIONS: FlooringOption[] = [
 ];
 
 const TILE_OPTIONS: FlooringOption[] = [
+  { type: 'none', name: 'None (Original)', cost: 0 },
   { type: 'ceramic', name: 'Ceramic', cost: 300 },
   { type: 'porcelain', name: 'Porcelain', cost: 450 },
   { type: 'marble', name: 'Marble', cost: 800 },
@@ -79,6 +81,7 @@ const TILE_OPTIONS: FlooringOption[] = [
 ];
 
 const FALSE_CEILING_OPTIONS: FalseCeilingOption[] = [
+  { type: 'none', name: 'None', cost: 0 },
   { type: 'gypsum', name: 'Gypsum Board', cost: 250 },
   { type: 'pop', name: 'POP (Plaster of Paris)', cost: 200 },
   { type: 'pvc', name: 'PVC Panels', cost: 150 },
