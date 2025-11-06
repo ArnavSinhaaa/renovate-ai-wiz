@@ -20,6 +20,11 @@ export interface MaterialCosts {
   tiles: number;
   falseCeiling: number;
   total: number;
+  wallsDuration: number;
+  flooringDuration: number;
+  tilesDuration: number;
+  ceilingDuration: number;
+  totalDuration: number;
 }
 
 /** Props interface for BudgetPlanner component */
@@ -39,8 +44,10 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budget, cartItems,
   // Add material costs to total
   const materialTotal = materialCosts?.total || 0;
   const totalCost = renovationCost + materialTotal;
-  // Calculate total project timeline (longest individual item time)
-  const totalTime = useMemo(() => Math.max(...cartItems.map(item => item.time), 0), [cartItems]);
+  // Calculate total project timeline (longest individual item time + material durations)
+  const renovationTime = useMemo(() => Math.max(...cartItems.map(item => item.time), 0), [cartItems]);
+  const materialTime = materialCosts?.totalDuration || 0;
+  const totalTime = renovationTime + materialTime;
   // Check if total cost is within budget
   const isWithinBudget = totalCost <= budget;
   const remainingBudget = budget - totalCost;
@@ -262,37 +269,69 @@ ${cartItems.map((item, i) => `${i + 1}. ${item.suggestion} - ₹${item.cost.toLo
                 <>
                   {materialCosts.walls > 0 && (
                     <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/20 hover:shadow-sm transition-shadow">
-                      <span className="font-medium flex items-center gap-2">
-                        <Palette className="w-4 h-4 text-secondary-foreground" />
-                        Wall Paint
-                      </span>
+                      <div>
+                        <span className="font-medium flex items-center gap-2">
+                          <Palette className="w-4 h-4 text-secondary-foreground" />
+                          Wall Paint
+                        </span>
+                        {materialCosts.wallsDuration > 0 && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                            <Clock className="w-3 h-3" />
+                            {materialCosts.wallsDuration} {materialCosts.wallsDuration === 1 ? 'day' : 'days'}
+                          </span>
+                        )}
+                      </div>
                       <span className="font-bold">₹{materialCosts.walls.toLocaleString()}</span>
                     </div>
                   )}
                   {materialCosts.flooring > 0 && (
                     <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 hover:shadow-sm transition-shadow">
-                      <span className="font-medium flex items-center gap-2">
-                        <Layers className="w-4 h-4 text-accent-foreground" />
-                        Flooring
-                      </span>
+                      <div>
+                        <span className="font-medium flex items-center gap-2">
+                          <Layers className="w-4 h-4 text-accent-foreground" />
+                          Flooring
+                        </span>
+                        {materialCosts.flooringDuration > 0 && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                            <Clock className="w-3 h-3" />
+                            {materialCosts.flooringDuration} {materialCosts.flooringDuration === 1 ? 'day' : 'days'}
+                          </span>
+                        )}
+                      </div>
                       <span className="font-bold">₹{materialCosts.flooring.toLocaleString()}</span>
                     </div>
                   )}
                   {materialCosts.tiles > 0 && (
                     <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-br from-muted/30 to-muted/50 border border-muted hover:shadow-sm transition-shadow">
-                      <span className="font-medium flex items-center gap-2">
-                        <Square className="w-4 h-4 text-foreground" />
-                        Tiles
-                      </span>
+                      <div>
+                        <span className="font-medium flex items-center gap-2">
+                          <Square className="w-4 h-4 text-foreground" />
+                          Tiles
+                        </span>
+                        {materialCosts.tilesDuration > 0 && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                            <Clock className="w-3 h-3" />
+                            {materialCosts.tilesDuration} {materialCosts.tilesDuration === 1 ? 'day' : 'days'}
+                          </span>
+                        )}
+                      </div>
                       <span className="font-bold">₹{materialCosts.tiles.toLocaleString()}</span>
                     </div>
                   )}
                   {materialCosts.falseCeiling > 0 && (
                     <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 hover:shadow-sm transition-shadow">
-                      <span className="font-medium flex items-center gap-2">
-                        <Layers className="w-4 h-4 text-primary" />
-                        False Ceiling
-                      </span>
+                      <div>
+                        <span className="font-medium flex items-center gap-2">
+                          <Layers className="w-4 h-4 text-primary" />
+                          False Ceiling
+                        </span>
+                        {materialCosts.ceilingDuration > 0 && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                            <Clock className="w-3 h-3" />
+                            {materialCosts.ceilingDuration} {materialCosts.ceilingDuration === 1 ? 'day' : 'days'}
+                          </span>
+                        )}
+                      </div>
                       <span className="font-bold text-primary">₹{materialCosts.falseCeiling.toLocaleString()}</span>
                     </div>
                   )}

@@ -70,7 +70,12 @@ const Index = () => {
     flooring: 0,
     tiles: 0,
     falseCeiling: 0,
-    total: 0
+    total: 0,
+    wallsDuration: 0,
+    flooringDuration: 0,
+    tilesDuration: 0,
+    ceilingDuration: 0,
+    totalDuration: 0
   });
 
   // State for false ceiling

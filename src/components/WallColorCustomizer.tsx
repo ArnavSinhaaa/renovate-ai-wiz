@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Palette, Save, Share2, Copy, RotateCcw, Square, Layers, DollarSign, Ruler } from 'lucide-react';
+import { Palette, Save, Share2, Copy, RotateCcw, Square, Layers, DollarSign, Ruler, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +33,12 @@ export interface MaterialCosts {
   flooring: number; 
   tiles: number; 
   falseCeiling: number;
-  total: number; 
+  total: number;
+  wallsDuration: number;
+  flooringDuration: number;
+  tilesDuration: number;
+  ceilingDuration: number;
+  totalDuration: number;
 }
 
 export interface FalseCeilingOption {
@@ -127,12 +132,27 @@ export const WallColorCustomizer: React.FC<Props> = ({
   const paintableArea = netWallArea * paintCoats * (1 + wastage / 100);
   const tileArea = (floorArea * tilePct) / 100;
   
+  // Check if "No Paint" is selected on all walls
+  const isPaintSelected = wallColors.left.name !== 'No Paint (Original)' || 
+                          wallColors.right.name !== 'No Paint (Original)' || 
+                          wallColors.front.name !== 'No Paint (Original)';
+  
   const PAINT_RATE = 80;
-  const paintCost = paintableArea * PAINT_RATE;
+  const PAINT_COVERAGE_PER_DAY = 100; // m² per day
+  const paintCost = isPaintSelected ? paintableArea * PAINT_RATE : 0;
+  const wallsDuration = isPaintSelected ? Math.ceil(paintableArea / PAINT_COVERAGE_PER_DAY) : 0;
+  
   const flooringCost = (flooring.cost || 0) * (floorArea - tileArea);
+  const flooringDuration = flooring.duration || 0;
+  
   const tileCost = (tile.cost || 0) * tileArea;
+  const tilesDuration = tile.duration || 0;
+  
   const falseCeilingCost = (falseCeiling?.cost || 0) * floorArea;
+  const ceilingDuration = falseCeiling?.duration || 0;
+  
   const total = paintCost + flooringCost + tileCost + falseCeilingCost;
+  const totalDuration = wallsDuration + flooringDuration + tilesDuration + ceilingDuration;
 
   useEffect(() => {
     onMaterialCostsChange?.({ 
@@ -140,9 +160,14 @@ export const WallColorCustomizer: React.FC<Props> = ({
       flooring: flooringCost, 
       tiles: tileCost,
       falseCeiling: falseCeilingCost,
-      total 
+      total,
+      wallsDuration,
+      flooringDuration,
+      tilesDuration,
+      ceilingDuration,
+      totalDuration
     });
-  }, [paintCost, flooringCost, tileCost, falseCeilingCost, total]);
+  }, [paintCost, flooringCost, tileCost, falseCeilingCost, total, wallsDuration, flooringDuration, tilesDuration, ceilingDuration, totalDuration]);
 
   const handleCustomColorApply = () => {
     if (customColorName.trim()) {
@@ -570,28 +595,80 @@ export const WallColorCustomizer: React.FC<Props> = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <div className="flex justify-between">
-              <span>Paint ({paintableArea.toFixed(1)} m² × ₹{PAINT_RATE})</span>
-              <span>₹{paintCost.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Flooring ({(floorArea - tileArea).toFixed(1)} m² × ₹{flooring.cost})</span>
-              <span>₹{flooringCost.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Tiles ({tileArea.toFixed(1)} m² × ₹{tile.cost})</span>
-              <span>₹{tileCost.toLocaleString()}</span>
-            </div>
-            {falseCeilingCost > 0 && (
-              <div className="flex justify-between">
-                <span>False Ceiling ({floorArea.toFixed(1)} m² × ₹{falseCeiling?.cost})</span>
-                <span>₹{falseCeilingCost.toLocaleString()}</span>
+            {paintCost > 0 && (
+              <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/20">
+                <div>
+                  <span className="font-medium flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-secondary-foreground" />
+                    Paint ({paintableArea.toFixed(1)} m² × ₹{PAINT_RATE})
+                  </span>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                    <Clock className="w-3 h-3" />
+                    {wallsDuration} {wallsDuration === 1 ? 'day' : 'days'}
+                  </span>
+                </div>
+                <span className="font-bold">₹{paintCost.toLocaleString()}</span>
               </div>
             )}
-            <hr />
-            <div className="flex justify-between font-bold">
-              <span>Total</span>
-              <span>₹{total.toLocaleString()}</span>
+            {flooringCost > 0 && (
+              <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20">
+                <div>
+                  <span className="font-medium flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-accent-foreground" />
+                    Flooring ({(floorArea - tileArea).toFixed(1)} m² × ₹{flooring.cost})
+                  </span>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                    <Clock className="w-3 h-3" />
+                    {flooringDuration} {flooringDuration === 1 ? 'day' : 'days'}
+                  </span>
+                </div>
+                <span className="font-bold">₹{flooringCost.toLocaleString()}</span>
+              </div>
+            )}
+            {tileCost > 0 && (
+              <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-br from-muted/30 to-muted/50 border border-muted">
+                <div>
+                  <span className="font-medium flex items-center gap-2">
+                    <Square className="w-4 h-4 text-foreground" />
+                    Tiles ({tileArea.toFixed(1)} m² × ₹{tile.cost})
+                  </span>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                    <Clock className="w-3 h-3" />
+                    {tilesDuration} {tilesDuration === 1 ? 'day' : 'days'}
+                  </span>
+                </div>
+                <span className="font-bold">₹{tileCost.toLocaleString()}</span>
+              </div>
+            )}
+            {falseCeilingCost > 0 && (
+              <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20">
+                <div>
+                  <span className="font-medium flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-primary" />
+                    False Ceiling ({floorArea.toFixed(1)} m² × ₹{falseCeiling?.cost})
+                  </span>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                    <Clock className="w-3 h-3" />
+                    {ceilingDuration} {ceilingDuration === 1 ? 'day' : 'days'}
+                  </span>
+                </div>
+                <span className="font-bold text-primary">₹{falseCeilingCost.toLocaleString()}</span>
+              </div>
+            )}
+            <div className="border-t pt-3 mt-3">
+              <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20 border-2 border-primary/40">
+                <div>
+                  <span className="font-bold text-lg flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-primary" />
+                    Total
+                  </span>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                    <Clock className="w-3 h-3" />
+                    {totalDuration} {totalDuration === 1 ? 'day' : 'days'} total
+                  </span>
+                </div>
+                <span className="font-bold text-2xl text-primary">₹{total.toLocaleString()}</span>
+              </div>
             </div>
           </div>
         </CardContent>
