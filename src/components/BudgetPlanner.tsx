@@ -60,8 +60,9 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budget, cartItems,
       return acc;
     }, {} as Record<string, number>), [cartItems]
   );
-  // Calculate average cost per day
-  const avgCostPerDay = totalTime > 0 ? totalCost / totalTime : 0;
+  // Calculate average cost per day and per item
+  const avgCostPerDay = totalTime > 0 ? Math.round(totalCost / totalTime) : 0;
+  const avgCostPerItem = cartItems.length > 0 ? Math.round(renovationCost / cartItems.length) : 0;
 
   // Export budget summary as text
   const exportBudgetSummary = () => {
@@ -204,11 +205,14 @@ ${cartItems.map((item, i) => `${i + 1}. ${item.suggestion} - ₹${item.cost.toLo
             <p className="text-sm text-muted-foreground">
               Estimated completion
             </p>
-            {avgCostPerDay > 0 && (
-              <p className="text-xs text-muted-foreground">
-                ₹{avgCostPerDay.toLocaleString()} per day
-              </p>
-            )}
+            <div className="flex gap-2 text-xs text-muted-foreground">
+              {avgCostPerDay > 0 && (
+                <span>₹{avgCostPerDay.toLocaleString()}/day</span>
+              )}
+              {avgCostPerItem > 0 && cartItems.length > 1 && (
+                <span>• ₹{avgCostPerItem.toLocaleString()}/item</span>
+              )}
+            </div>
           </div>
         </div>
 

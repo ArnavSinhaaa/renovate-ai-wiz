@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { RenovationSuggestion } from '@/data/renovationSuggestions';
 import { ImageComparisonSlider } from './ImageComparisonSlider';
 import { toast } from 'sonner';
+import { saveUserPhoto } from '@/services/database';
 
 interface RenovationPreviewProps {
   selectedSuggestions: RenovationSuggestion[];
@@ -137,6 +138,21 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
       toast.success('Renovation preview generated!', {
         description: 'Your AI-generated preview is ready'
       });
+
+      // Save the generated image to database using session ID
+      try {
+        const sessionId = localStorage.getItem('fixfy_session_id') || `session-${Date.now()}`;
+        localStorage.setItem('fixfy_session_id', sessionId);
+        
+        await saveUserPhoto(sessionId, {
+          imageUrl: data.imageUrl,
+          roomType: roomType || 'Custom'
+        });
+        console.log('💾 Generated image saved to database');
+      } catch (saveError) {
+        console.error('Failed to save image to database:', saveError);
+        // Don't show error to user as the image was generated successfully
+      }
     } catch (error) {
       console.error('Failed to generate renovation preview:', error);
       alert(`❌ Unexpected Error\n\n${error.message || error}\n\nPlease:\n1. Check console for details\n2. Verify edge function is deployed\n3. Check Supabase edge function logs\n4. Try a different provider`);

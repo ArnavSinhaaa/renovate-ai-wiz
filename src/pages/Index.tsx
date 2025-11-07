@@ -26,6 +26,7 @@ import { useUserSession } from '@/hooks/useUserSession';
 import { getFilteredSuggestions, RenovationSuggestion } from '@/data/renovationSuggestions';
 import { MaterialCosts, FalseCeilingOption } from '@/components/WallColorCustomizer';
 import { WallCustomizationPanel } from '@/components/WallCustomizationPanel';
+import { CustomRenovationPrompt } from '@/components/CustomRenovationPrompt';
 import { toast } from 'sonner';
 import heroImage from '@/assets/hero-renovation.jpg';
 
@@ -168,6 +169,40 @@ const Index = () => {
       return newItems;
     });
   }, []);
+
+  /**
+   * Adds a custom renovation from user prompt
+   */
+  const handleAddCustomRenovation = useCallback((prompt: string, cost: number, time: number) => {
+    // Map room type to valid RenovationSuggestion room types
+    const validRooms = ['Living Room', 'Bedroom', 'Kitchen', 'Bathroom', 'Balcony', 'Outdoor'] as const;
+    const roomMapping: { [key: string]: typeof validRooms[number] } = {
+      'Living Room': 'Living Room',
+      'Bedroom': 'Bedroom',
+      'Kitchen': 'Kitchen',
+      'Bathroom': 'Bathroom',
+      'Balcony': 'Balcony',
+      'Outdoor': 'Outdoor',
+    };
+    
+    const mappedRoom = roomMapping[selectedRoom] || 'Living Room';
+    
+    const customRenovation: RenovationSuggestion = {
+      id: `custom-${Date.now()}`,
+      trigger: 'custom',
+      condition: 'User-defined renovation',
+      suggestion: prompt,
+      cost,
+      time,
+      impact: 'Medium',
+      type: 'Professional',
+      room: mappedRoom,
+      buyLinks: []
+    };
+    
+    setCartItems(prev => [...prev, customRenovation]);
+    toast.success('Custom renovation added!');
+  }, [selectedRoom]);
 
   /**
    * Removes an item from the cart
@@ -349,6 +384,9 @@ const Index = () => {
               falseCeiling={falseCeiling}
               onFalseCeilingChange={setFalseCeiling}
             />
+
+            {/* Custom Renovation Prompt */}
+            <CustomRenovationPrompt onAddCustomRenovation={handleAddCustomRenovation} />
 
             {/* Content Ad - Between analysis and suggestions */}
             {adManager.canShowMoreAds() && !adManager.isLoading && <AdPlacement position="content" adType="adsense" />}
