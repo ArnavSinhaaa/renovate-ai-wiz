@@ -81,7 +81,7 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
       console.log('🎨 Generating room renovation preview with img2img...');
       console.log('⚠️ Credit Usage Warning: Using Lovable AI Gateway for image generation');
       toast.info('Using AI credits for image generation', {
-        description: 'This will consume AI credits from your Lovable account',
+        description: 'This will consume AI credits from your account',
         duration: 4000
       });
       
