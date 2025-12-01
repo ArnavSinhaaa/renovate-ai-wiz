@@ -141,9 +141,10 @@ Remember: Transform ONLY what's mentioned in the suggestions. Keep everything el
     });
 
   } catch (error) {
+    const err = error as Error;
     console.error('Error in generate-renovation function:', error);
     return new Response(JSON.stringify({ 
-      error: error.message 
+      error: err.message
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

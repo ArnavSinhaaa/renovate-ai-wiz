@@ -188,15 +188,16 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    const err = error as Error;
     console.error('[generate-image-v2] Unexpected error:', {
-      message: error.message,
-      stack: error.stack,
-      type: error.constructor.name
+      message: err.message,
+      stack: err.stack,
+      type: err.constructor.name
     });
     return new Response(
       JSON.stringify({ 
         error: 'Failed to generate image due to unexpected error',
-        details: error.message,
+        details: err.message,
         status: 'error',
         suggestion: 'Check edge function logs for more details'
       }),
@@ -328,8 +329,9 @@ Apply the transformation naturally as if a professional interior designer edited
 
     return { imageUrl };
   } catch (error) {
+    const err = error as Error;
     console.error('[Google] Generation failed:', error);
-    return { error: `Google Gemini generation failed: ${error.message}` };
+    return { error: `Google Gemini generation failed: ${err.message}` };
   }
 }
 
@@ -390,8 +392,9 @@ async function generateWithReplicate(apiKey: string, model: string, prompt: stri
     }
 
   } catch (error) {
+    const err = error as Error;
     console.error(`[Replicate] Exception:`, error);
-    return { error: `Replicate generation failed: ${error.message}` };
+    return { error: `Replicate generation failed: ${err.message}` };
   }
 }
 
@@ -454,8 +457,9 @@ async function generateWithHuggingFace(apiKey: string, model: string, prompt: st
     return { imageUrl: `data:image/png;base64,${base64}` };
 
   } catch (error) {
+    const err = error as Error;
     console.error(`[HuggingFace] Exception:`, error);
-    return { error: `Hugging Face generation failed: ${error.message}` };
+    return { error: `Hugging Face generation failed: ${err.message}` };
   }
 }
 
@@ -508,13 +512,14 @@ async function generateWithLovable(apiKey: string, model: string, prompt: string
     return { imageUrl };
 
   } catch (error) {
+    const err = error as Error;
     console.error(`[Lovable] Exception:`, error);
-    return { error: `Lovable AI generation failed: ${error.message}` };
+    return { error: `Lovable AI generation failed: ${err.message}` };
   }
 }
 
 function getReplicateVersion(model: string): string {
-  const versions = {
+  const versions: Record<string, string> = {
     'black-forest-labs/flux-schnell': '85a7b3e7aed47e0aab28b7e1d3cda7b5b7a2b6a4d3f6e7b2e6d9f8c5e4a3b2c1',
     'stability-ai/stable-diffusion-3': '527d2a6296facb8e47ba1eaf17f142c240c19a30894f437feee9b91cc29d8e4f'
   };

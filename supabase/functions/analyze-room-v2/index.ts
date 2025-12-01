@@ -187,15 +187,16 @@ Provide 3-7 realistic objects with Indian pricing in Rupees. Make suggestions pr
     );
 
   } catch (error) {
+    const err = error as Error;
     console.error('[analyze-room-v2] Unexpected error:', {
-      message: error.message,
-      stack: error.stack,
-      type: error.constructor.name
+      message: err.message,
+      stack: err.stack,
+      type: err.constructor.name
     });
     return new Response(
       JSON.stringify({ 
         error: 'Failed to analyze room due to unexpected error',
-        details: error.message,
+        details: err.message,
         status: 'error',
         suggestion: 'Check edge function logs for more details'
       }),
@@ -256,8 +257,9 @@ async function analyzeWithGroq(apiKey: string, model: string, prompt: string, im
     return { data: parsedData };
 
   } catch (error) {
+    const err = error as Error;
     console.error(`[Groq] Exception:`, error);
-    return { error: `Groq analysis failed: ${error.message}` };
+    return { error: `Groq analysis failed: ${err.message}` };
   }
 }
 
@@ -315,8 +317,9 @@ async function analyzeWithGoogle(apiKey: string, model: string, prompt: string, 
     return { data: parsedData };
 
   } catch (error) {
+    const err = error as Error;
     console.error(`[Google] Exception:`, error);
-    return { error: `Google AI analysis failed: ${error.message}` };
+    return { error: `Google AI analysis failed: ${err.message}` };
   }
 }
 
@@ -372,8 +375,9 @@ async function analyzeWithOpenAI(apiKey: string, model: string, prompt: string, 
     return { data: parsedData };
 
   } catch (error) {
+    const err = error as Error;
     console.error(`[OpenAI] Exception:`, error);
-    return { error: `OpenAI analysis failed: ${error.message}` };
+    return { error: `OpenAI analysis failed: ${err.message}` };
   }
 }
 
@@ -429,7 +433,8 @@ async function analyzeWithLovable(apiKey: string, model: string, prompt: string,
     return { data: parsedData };
 
   } catch (error) {
+    const err = error as Error;
     console.error(`[Lovable] Exception:`, error);
-    return { error: `Lovable AI analysis failed: ${error.message}` };
+    return { error: `Lovable AI analysis failed: ${err.message}` };
   }
 }
