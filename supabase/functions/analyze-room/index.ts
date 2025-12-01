@@ -172,9 +172,10 @@ Return ONLY the JSON object, nothing else.`
     }
 
   } catch (error) {
+    const err = error as Error;
     console.error('Error in analyze-room function:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: err.message,
       detectedObjects: []
     }), {
       status: 500,

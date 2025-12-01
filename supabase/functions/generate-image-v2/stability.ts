@@ -59,7 +59,8 @@ export async function generateWithStability(
     }
 
   } catch (error) {
+    const err = error as Error;
     console.error(`[Stability] Exception:`, error);
-    return { error: `Stability AI generation failed: ${error.message}` };
+    return { error: `Stability AI generation failed: ${err.message}` };
   }
 }
