@@ -74,8 +74,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       const { data, error } = await supabase.functions.invoke('analyze-room-v2', {
         body: { 
           imageBase64: base64Data, 
-          selectedProvider: 'LOVABLE', // Default to Lovable AI (pre-configured)
-          selectedModel: 'google/gemini-2.5-flash'
+          selectedProvider: 'GOOGLE', // Default to Google Gemini
+          selectedModel: 'gemini-2.0-flash-exp'
         }
       });
 
