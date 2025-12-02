@@ -75,7 +75,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         body: { 
           imageBase64: base64Data, 
           selectedProvider: 'GOOGLE', // Default to Google Gemini
-          selectedModel: 'gemini-2.0-flash-exp'
+          selectedModel: 'gemini-1.5-flash'
         }
       });
 
