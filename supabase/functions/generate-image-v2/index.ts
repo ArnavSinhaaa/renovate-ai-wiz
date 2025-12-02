@@ -237,8 +237,7 @@ Requirements:
 - Transformation intensity: ${Math.round(strength * 100)}%`,
         n: 1,
         size: `${width}x${height}`,
-        quality: 'high',
-        response_format: 'b64_json'
+        quality: 'high'
       };
 
       const response = await fetch('https://api.openai.com/v1/images/generations', {
@@ -280,8 +279,7 @@ Requirements:
         prompt: prompt,
         n: 1,
         size: `${width}x${height}`,
-        quality: 'high',
-        response_format: 'b64_json'
+        quality: 'high'
       };
 
       const response = await fetch('https://api.openai.com/v1/images/generations', {
