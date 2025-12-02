@@ -49,6 +49,9 @@ interface DetectedObject {
  * @returns JSX element containing the complete renovation interface
  */
 const Index = () => {
+  // Step tracking
+  const [currentStep, setCurrentStep] = useState(1);
+  
   // State for uploaded image management
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
@@ -116,6 +119,7 @@ const Index = () => {
     const imageUrl = URL.createObjectURL(file);
     setUploadedImage(imageUrl);
     setIsAnalyzing(true);
+    setCurrentStep(2); // Move to step 2 after upload
   }, []);
 
   /**
@@ -125,22 +129,26 @@ const Index = () => {
    */
   const handleAnalysisComplete = useCallback((objects: DetectedObject[]) => {
     setDetectedObjects(objects);
-
-    // Get renovation suggestions based on detected objects
-    const objectNames = objects.map(obj => obj.name.toLowerCase());
-    const suggestions = getFilteredSuggestions(objectNames, budget, selectedRoom === 'all' ? undefined : selectedRoom);
-    
-    // Filter to show only suggestions matching detected objects
-    const relevantSuggestions = suggestions.filter(suggestion => 
-      objectNames.some(objName => 
-        suggestion.trigger.toLowerCase().includes(objName) ||
-        objName.includes(suggestion.trigger.toLowerCase())
-      )
-    );
-    
-    setFilteredSuggestions(relevantSuggestions.length > 0 ? relevantSuggestions : suggestions.slice(0, 6));
     setIsAnalyzing(false);
-    toast.success(`Room analysis complete! Found ${relevantSuggestions.length} matching suggestions.`);
+    
+    if (objects.length > 0) {
+      setCurrentStep(3); // Move to step 3 after analysis
+
+      // Get renovation suggestions based on detected objects
+      const objectNames = objects.map(obj => obj.name.toLowerCase());
+      const suggestions = getFilteredSuggestions(objectNames, budget, selectedRoom === 'all' ? undefined : selectedRoom);
+      
+      // Filter to show only suggestions matching detected objects
+      const relevantSuggestions = suggestions.filter(suggestion => 
+        objectNames.some(objName => 
+          suggestion.trigger.toLowerCase().includes(objName) ||
+          objName.includes(suggestion.trigger.toLowerCase())
+        )
+      );
+      
+      setFilteredSuggestions(relevantSuggestions.length > 0 ? relevantSuggestions : suggestions.slice(0, 6));
+      toast.success(`Room analysis complete! Found ${relevantSuggestions.length} matching suggestions.`);
+    }
   }, [budget, selectedRoom]);
 
   /**
@@ -152,6 +160,8 @@ const Index = () => {
     setDetectedObjects([]);
     setFilteredSuggestions([]);
     setIsAnalyzing(false);
+    setCurrentStep(1); // Reset to step 1
+    toast.info('Image removed');
   }, []);
 
   /**
@@ -165,10 +175,11 @@ const Index = () => {
         return prev;
       }
       const newItems = [...prev, suggestion];
+      if (currentStep < 4) setCurrentStep(4); // Move to step 4 when adding items
       toast.success(`${suggestion.suggestion} added to cart!`);
       return newItems;
     });
-  }, []);
+  }, [currentStep]);
 
   /**
    * Adds a custom renovation from user prompt
@@ -258,13 +269,67 @@ const Index = () => {
       setFilteredSuggestions(relevantSuggestions.length > 0 ? relevantSuggestions : suggestions.slice(0, 6));
     }
   }, [detectedObjects, budget]);
-  return <div className="min-h-screen bg-background">
+  const steps = [
+    { number: 1, title: 'Upload Photo', icon: Upload },
+    { number: 2, title: 'Set Budget', icon: Calculator },
+    { number: 3, title: 'AI Analysis', icon: Sparkles },
+    { number: 4, title: 'Choose Options', icon: ShoppingBag },
+  ];
+
+  return <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       {/* Header with theme toggle only */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-end">
-          <ThemeToggle />
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b shadow-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Home className="w-6 h-6 text-primary" />
+              <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">Fixfy AI</span>
+            </div>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
+      
+      {/* Step Progress Indicator */}
+      {currentStep > 1 && (
+        <div className="sticky top-[73px] z-40 bg-background/95 backdrop-blur-md border-b shadow-sm animate-slide-up">
+          <div className="container mx-auto px-4 py-6">
+            <div className="flex items-center justify-between max-w-3xl mx-auto">
+              {steps.map((step, index) => {
+                const Icon = step.icon;
+                const isCompleted = currentStep > step.number;
+                const isCurrent = currentStep === step.number;
+                
+                return (
+                  <React.Fragment key={step.number}>
+                    <div className="flex flex-col items-center gap-2 flex-1">
+                      <div className={`
+                        w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300
+                        ${isCompleted ? 'bg-gradient-primary text-white shadow-glow scale-110' : ''}
+                        ${isCurrent ? 'bg-primary text-white shadow-glow animate-pulse' : ''}
+                        ${!isCompleted && !isCurrent ? 'bg-muted text-muted-foreground' : ''}
+                      `}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div className="text-center hidden md:block">
+                        <div className={`text-sm font-medium transition-colors ${isCurrent || isCompleted ? 'text-foreground' : 'text-muted-foreground'}`}>
+                          {step.title}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Step {step.number}</div>
+                      </div>
+                    </div>
+                    {index < steps.length - 1 && (
+                      <div className={`h-0.5 flex-1 transition-all duration-300 ${
+                        currentStep > step.number ? 'bg-gradient-primary' : 'bg-muted'
+                      }`} />
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Header Ad Banner */}
       <AdPlacement position="header" adType="adsense" />
@@ -332,32 +397,71 @@ const Index = () => {
       }} />
       </section>
 
-      {/* Main Content Section - Interactive renovation tools */}
+      {/* Main Content Section - Step-by-step interactive renovation process */}
       <section className="container mx-auto px-4 py-12">
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Left Column - Main interaction area */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* User Controls - Budget and room type selection */}
-            <Card className="shadow-soft">
+        <div className="max-w-7xl mx-auto space-y-8">
+          
+          {/* Step 1: Upload Photo */}
+          <Card className="shadow-lg border-2 hover:shadow-glow transition-shadow duration-300 animate-fade-in">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-2xl">
+                <div className="w-10 h-10 rounded-full bg-gradient-primary text-white flex items-center justify-center shadow-glow">
+                  1
+                </div>
+                <span>Upload Your Room Photo</span>
+              </CardTitle>
+              <p className="text-muted-foreground mt-2">
+                Start by uploading a clear photo of the room you want to renovate
+              </p>
+            </CardHeader>
+            <CardContent>
+              <ImageUpload 
+                onImageUpload={handleImageUpload} 
+                uploadedImage={uploadedImage} 
+                onRemoveImage={handleRemoveImage} 
+                isAnalyzing={isAnalyzing} 
+                onAnalysisComplete={handleAnalysisComplete} 
+                currentImageId={currentImageId || undefined} 
+              />
+            </CardContent>
+          </Card>
+
+          {/* Step 2: Set Budget & Room Type */}
+          {currentStep >= 2 && (
+            <Card className="shadow-lg border-2 hover:shadow-glow transition-all duration-300 animate-slide-up">
               <CardHeader>
-                <CardTitle>Get Started</CardTitle>
+                <CardTitle className="flex items-center gap-3 text-2xl">
+                  <div className="w-10 h-10 rounded-full bg-gradient-primary text-white flex items-center justify-center shadow-glow">
+                    2
+                  </div>
+                  <span>Set Your Budget & Preferences</span>
+                </CardTitle>
+                <p className="text-muted-foreground mt-2">
+                  Tell us your budget and room type for personalized suggestions
+                </p>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  {/* Budget input field */}
-                  <div className="space-y-2">
-                    <Label htmlFor="budget">Budget (₹)</Label>
-                    <Input id="budget" type="number" value={budget} onChange={e => handleBudgetChange(e.target.value)} placeholder="Enter your budget" min="0" />
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <Label htmlFor="budget" className="text-base font-semibold">Budget (₹)</Label>
+                    <Input 
+                      id="budget" 
+                      type="number" 
+                      value={budget} 
+                      onChange={e => handleBudgetChange(e.target.value)} 
+                      placeholder="Enter your budget" 
+                      min="0"
+                      className="h-12 text-lg"
+                    />
                   </div>
                   
-                  {/* Room type selection dropdown */}
-                  <div className="space-y-2">
-                    <Label htmlFor="room">Room Type (Optional)</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="room" className="text-base font-semibold">Room Type (Optional)</Label>
                     <Select value={selectedRoom} onValueChange={handleRoomChange}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-12 text-lg bg-background">
                         <SelectValue placeholder="Select room type" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background z-50">
                         <SelectItem value="all">All Rooms</SelectItem>
                         <SelectItem value="Living Room">Living Room</SelectItem>
                         <SelectItem value="Bedroom">Bedroom</SelectItem>
@@ -371,79 +475,140 @@ const Index = () => {
                 </div>
               </CardContent>
             </Card>
+          )}
 
-            {/* Image Upload Component - Handles file upload and AI analysis */}
-            <ImageUpload onImageUpload={handleImageUpload} uploadedImage={uploadedImage} onRemoveImage={handleRemoveImage} isAnalyzing={isAnalyzing} onAnalysisComplete={handleAnalysisComplete} currentImageId={currentImageId || undefined} />
+          {/* Step 3: AI Analysis Results */}
+          {currentStep >= 3 && (
+            <Card className="shadow-lg border-2 hover:shadow-glow transition-all duration-300 animate-slide-up">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3 text-2xl">
+                  <div className="w-10 h-10 rounded-full bg-gradient-primary text-white flex items-center justify-center shadow-glow">
+                    3
+                  </div>
+                  <span>AI Analysis Results</span>
+                </CardTitle>
+                <p className="text-muted-foreground mt-2">
+                  Our AI has detected these items in your room
+                </p>
+              </CardHeader>
+              <CardContent>
+                <ObjectDetection detectedObjects={detectedObjects} isAnalyzing={isAnalyzing} />
+              </CardContent>
+            </Card>
+          )}
 
-            {/* Object Detection Results - Shows AI analysis findings */}
-            <ObjectDetection detectedObjects={detectedObjects} isAnalyzing={isAnalyzing} />
-
-            {/* Wall Customization Panel - Material selection and costs */}
-            <WallCustomizationPanel 
-              onMaterialCostsChange={setMaterialCosts}
-              falseCeiling={falseCeiling}
-              onFalseCeilingChange={setFalseCeiling}
-            />
-
-            {/* Custom Renovation Prompt */}
-            <CustomRenovationPrompt onAddCustomRenovation={handleAddCustomRenovation} />
-
-            {/* Content Ad - Between analysis and suggestions */}
-            {adManager.canShowMoreAds() && !adManager.isLoading && <AdPlacement position="content" adType="adsense" />}
-
-            {/* Renovation Suggestions - AI-generated recommendations */}
-            {filteredSuggestions.length > 0 && <Card className="shadow-soft">
+          {/* Step 4: Renovation Options */}
+          {currentStep >= 3 && filteredSuggestions.length > 0 && (
+            <>
+              {/* Wall Customization */}
+              <Card className="shadow-lg border-2 hover:shadow-glow transition-all duration-300 animate-slide-up">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-primary" />
-                    Renovation Suggestions ({filteredSuggestions.length})
-                    {detectedObjects.length > 0 && (
-                      <span className="text-sm font-normal text-muted-foreground">
-                        - Based on detected objects
-                      </span>
-                    )}
+                  <CardTitle className="flex items-center gap-3 text-2xl">
+                    <div className="w-10 h-10 rounded-full bg-gradient-primary text-white flex items-center justify-center shadow-glow">
+                      4
+                    </div>
+                    <span>Choose Your Renovations</span>
                   </CardTitle>
+                  <p className="text-muted-foreground mt-2">
+                    Select renovation options from AI suggestions or customize your own
+                  </p>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {filteredSuggestions.map(suggestion => <RenovationSuggestionCard key={suggestion.id} suggestion={suggestion} onAddToCart={handleAddToCart} isInCart={cartItems.some(item => item.id === suggestion.id)} />)}
+                <CardContent className="space-y-6">
+                  {/* Wall Customization Panel */}
+                  <WallCustomizationPanel 
+                    onMaterialCostsChange={setMaterialCosts}
+                    falseCeiling={falseCeiling}
+                    onFalseCeilingChange={setFalseCeiling}
+                  />
+
+                  {/* Custom Renovation Prompt */}
+                  <CustomRenovationPrompt onAddCustomRenovation={handleAddCustomRenovation} />
+
+                  {/* AI Suggestions */}
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-semibold flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-primary" />
+                      AI Suggested Renovations ({filteredSuggestions.length})
+                    </h3>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {filteredSuggestions.map(suggestion => (
+                        <RenovationSuggestionCard 
+                          key={suggestion.id} 
+                          suggestion={suggestion} 
+                          onAddToCart={handleAddToCart} 
+                          isInCart={cartItems.some(item => item.id === suggestion.id)} 
+                        />
+                      ))}
+                    </div>
                   </div>
                 </CardContent>
-              </Card>}
-          </div>
+              </Card>
 
-          {/* Right Column - Budget management and preview tools */}
-          <div className="space-y-8">
-            {/* Sidebar Ad - Top of sidebar */}
-            {adManager.canShowMoreAds() && !adManager.isLoading && <AdPlacement position="sidebar" adType="adsense" />}
+              {/* Budget Planner & Preview - Sidebar */}
+              {currentStep >= 4 && (
+                <div className="grid lg:grid-cols-3 gap-8">
+                  <div className="lg:col-span-2">
+                    <Card className="shadow-lg border-2 hover:shadow-glow transition-all duration-300">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-3 text-2xl">
+                          <Sparkles className="w-6 h-6 text-primary" />
+                          Generate AI Preview
+                        </CardTitle>
+                        <p className="text-muted-foreground mt-2">
+                          See how your renovated room will look with AI-generated visualization
+                        </p>
+                      </CardHeader>
+                      <CardContent>
+                        <RenovationPreview 
+                          selectedSuggestions={cartItems} 
+                          roomType={selectedRoom === 'all' ? undefined : selectedRoom} 
+                          budget={budget} 
+                          uploadedImage={uploadedImage}
+                          imageProvider={imageProvider}
+                          imageModel={imageModel}
+                          providerStatus={providerStatus}
+                          onProviderStatusUpdate={(provider, status) => {
+                            setProviderStatus(prev => ({ ...prev, [provider]: status }));
+                          }}
+                        />
+                      </CardContent>
+                    </Card>
+                  </div>
 
-            {/* Budget Planner - Track costs and timeline */}
-            <BudgetPlanner 
-              budget={budget} 
-              cartItems={cartItems} 
-              onRemoveItem={handleRemoveItem}
-              materialCosts={materialCosts}
-            />
-            
-            {/* AI Renovation Preview - always available for easier experimentation */}
-            <RenovationPreview 
-              selectedSuggestions={cartItems} 
-              roomType={selectedRoom === 'all' ? undefined : selectedRoom} 
-              budget={budget} 
-              uploadedImage={uploadedImage}
-              imageProvider={imageProvider}
-              imageModel={imageModel}
-              providerStatus={providerStatus}
-              onProviderStatusUpdate={(provider, status) => {
-                setProviderStatus(prev => ({ ...prev, [provider]: status }));
-              }}
-            />
-            
-            {/* Image History - User's uploaded images (only show if authenticated) */}
-            {userId && <ImageHistory onImageSelect={(imageUrl) => {
-            setUploadedImage(imageUrl);
-          }} />}
-          </div>
+                  <div className="space-y-6">
+                    <Card className="shadow-lg border-2 hover:shadow-glow transition-all duration-300 sticky top-24">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-3 text-xl">
+                          <Calculator className="w-5 h-5 text-primary" />
+                          Budget Summary
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <BudgetPlanner 
+                          budget={budget} 
+                          cartItems={cartItems} 
+                          onRemoveItem={handleRemoveItem}
+                          materialCosts={materialCosts}
+                        />
+                      </CardContent>
+                    </Card>
+
+                    {/* Image History */}
+                    {userId && (
+                      <Card className="shadow-lg border-2 hover:shadow-glow transition-all duration-300">
+                        <CardContent className="pt-6">
+                          <ImageHistory onImageSelect={(imageUrl) => {
+                            setUploadedImage(imageUrl);
+                            setCurrentStep(2);
+                          }} />
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </section>
 
