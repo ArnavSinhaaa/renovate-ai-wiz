@@ -217,6 +217,14 @@ serve(async (req) => {
 async function generateWithOpenAI(apiKey: string, model: string, prompt: string, originalImage?: string, width = 1024, height = 1024, strength = 0.5) {
   console.log(`[OpenAI] Starting generation with model: ${model}, mode: ${originalImage ? 'img2img' : 'text2img'}`);
   try {
+    // gpt-image-1 only supports: 1024x1024, 1024x1536, 1536x1024, auto
+    let size = '1024x1024';
+    if (width === 1024 && height === 1536) size = '1024x1536';
+    else if (width === 1536 && height === 1024) size = '1536x1024';
+    else if (width === height && width >= 1024) size = '1024x1024';
+    
+    console.log(`[OpenAI] Using size: ${size} (requested: ${width}x${height})`);
+    
     if (originalImage) {
       // For image editing, we need to use the /v1/images/edits endpoint
       // However, gpt-image-1 doesn't support edits endpoint yet
@@ -236,7 +244,7 @@ Requirements:
 - Clean, well-composed shot
 - Transformation intensity: ${Math.round(strength * 100)}%`,
         n: 1,
-        size: `${width}x${height}`,
+        size: size,
         quality: 'high'
       };
 
@@ -278,7 +286,7 @@ Requirements:
         model: model,
         prompt: prompt,
         n: 1,
-        size: `${width}x${height}`,
+        size: size,
         quality: 'high'
       };
 

@@ -91,8 +91,8 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
           originalImage: imageBase64,
           selectedProvider: imageProvider,
           selectedModel: imageModel,
-          width: 768, // Optimized for credit efficiency
-          height: 768, // Optimized for credit efficiency
+          width: 1024, // OpenAI gpt-image-1 requires 1024x1024, 1024x1536, or 1536x1024
+          height: 1024,
           // Control how much the image should change (0.3-0.8 range)
           // Lower = more faithful to original, Higher = more creative changes
           strength: 0.45 // Optimized for credit efficiency while maintaining quality
