@@ -10,7 +10,7 @@ const AI_PROVIDERS = {
   GOOGLE: {
     name: 'Google Gemini',
     endpoint: 'https://generativelanguage.googleapis.com/v1/models/',
-    models: ['gemini-2.0-flash-exp', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'],
+    models: ['gemini-1.5-flash', 'gemini-1.5-pro'],
     keyName: 'GOOGLE_AI_KEY',
     freeLimit: 1500, // requests per day
     rateLimit: 15 // requests per minute
@@ -92,11 +92,7 @@ serve(async (req) => {
       );
     }
 
-    let model = selectedModel || provider.models[0];
-    if (selectedProvider === 'GOOGLE') {
-      if (model === 'gemini-1.5-flash') model = 'gemini-1.5-flash-latest';
-      if (model === 'gemini-1.5-pro') model = 'gemini-1.5-pro-latest';
-    }
+    const model = selectedModel || provider.models[0];
     console.log(`[analyze-room-v2] Using ${provider.name} with model: ${model}`);
     
     const analysisPrompt = `Analyze this room image and provide a detailed JSON response with detected objects and renovation suggestions. Focus on identifying furniture, lighting, flooring, walls, and potential improvements.
