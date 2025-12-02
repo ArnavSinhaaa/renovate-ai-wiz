@@ -25,8 +25,8 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
   roomType,
   budget,
   uploadedImage,
-  imageProvider = 'LOVABLE',
-  imageModel = 'google/gemini-2.5-flash-image',
+  imageProvider = 'OPENAI',
+  imageModel = 'gpt-image-1',
   providerStatus = {},
   onProviderStatusUpdate
 }) => {
@@ -79,9 +79,9 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
         : `Modernize this room with: ${Object.values(wallColors).map(w => w.name).join(', ')} wall colors, ${flooring.name} flooring, and ${tile.name} tiles.`;
       
       console.log('🎨 Generating room renovation preview with img2img...');
-      console.log('⚠️ Credit Usage Warning: Using Lovable AI Gateway for image generation');
-      toast.info('Using AI credits for image generation', {
-        description: 'This will consume AI credits from your account',
+      console.log('⚠️ Using OpenAI for image generation');
+      toast.info('Generating renovation preview with AI', {
+        description: 'Using OpenAI gpt-image-1 for high-quality results',
         duration: 4000
       });
       

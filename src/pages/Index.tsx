@@ -102,9 +102,9 @@ const Index = () => {
 
   // AI Provider settings - Default to Google Gemini for best accuracy
   const [analysisProvider, setAnalysisProvider] = useState('GOOGLE'); // Google Gemini for accurate object detection
-  const [analysisModel, setAnalysisModel] = useState('gemini-2.0-flash-exp');
-  const [imageProvider, setImageProvider] = useState('LOVABLE'); // Lovable AI for image generation (Google doesn't support img generation)
-  const [imageModel, setImageModel] = useState('google/gemini-2.5-flash-image');
+  const [analysisModel, setAnalysisModel] = useState('gemini-2.5-flash');
+  const [imageProvider, setImageProvider] = useState('OPENAI'); // OpenAI for reliable image generation
+  const [imageModel, setImageModel] = useState('gpt-image-1');
   const [providerStatus, setProviderStatus] = useState<{ [key: string]: string }>({});
 
   /**
