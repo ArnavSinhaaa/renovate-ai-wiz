@@ -299,18 +299,33 @@ async function analyzeWithGoogle(apiKey: string, model: string, prompt: string, 
     const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!content) {
+      console.error('[Google] No content in response:', JSON.stringify(data));
       return { error: 'No content received from Google AI' };
     }
 
-    // Clean and parse JSON response
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    console.log('[Google] Raw response content:', content.substring(0, 500));
+
+    // Clean and parse JSON response - handle markdown code blocks
+    let jsonText = content;
+    
+    // Remove markdown code blocks if present
+    jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+    
+    // Find JSON object
+    const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
+      console.error('[Google] No JSON found in content:', content.substring(0, 200));
       return { error: 'No valid JSON found in response' };
     }
 
-    const parsedData = JSON.parse(jsonMatch[0]);
-    console.log(`[Google] Analysis succeeded, found ${parsedData.detectedObjects?.length || 0} objects`);
-    return { data: parsedData };
+    try {
+      const parsedData = JSON.parse(jsonMatch[0]);
+      console.log(`[Google] Analysis succeeded, found ${parsedData.detectedObjects?.length || 0} objects`);
+      return { data: parsedData };
+    } catch (parseError) {
+      console.error('[Google] JSON parse error:', parseError, 'Content:', jsonMatch[0].substring(0, 200));
+      return { error: `Failed to parse JSON: ${parseError.message}` };
+    }
 
   } catch (error) {
     const err = error as Error;
