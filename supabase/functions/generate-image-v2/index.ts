@@ -217,55 +217,106 @@ serve(async (req) => {
 async function generateWithOpenAI(apiKey: string, model: string, prompt: string, originalImage?: string, width = 1024, height = 1024, strength = 0.5) {
   console.log(`[OpenAI] Starting generation with model: ${model}, mode: ${originalImage ? 'img2img' : 'text2img'}`);
   try {
-    // gpt-image-1 supports both text-to-image and image-to-image
-    const requestBody: any = {
-      model: model,
-      prompt: originalImage 
-        ? `Edit this room image: ${prompt}. IMPORTANT: Keep the original room structure, layout, and furniture positions. Only modify the specified elements. Transformation strength: ${Math.round(strength * 100)}%.`
-        : prompt,
-      n: 1,
-      size: `${width}x${height}`,
-      quality: 'high',
-      output_format: 'png'
-    };
-
-    // Add image for img2img editing
     if (originalImage) {
-      requestBody.image = originalImage;
-    }
-
-    const response = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody)
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[OpenAI] API error: ${response.status}`, errorText);
+      // For image editing, we need to use the /v1/images/edits endpoint
+      // However, gpt-image-1 doesn't support edits endpoint yet
+      // We'll use generations endpoint with a detailed prompt instead
+      console.log('[OpenAI] Using text-to-image with detailed prompt for room transformation');
       
-      if (response.status === 429) {
-        return { error: 'Rate limit exceeded', status: 429 };
+      const requestBody: any = {
+        model: model,
+        prompt: `Create a photorealistic room renovation based on this description: ${prompt}. 
+        
+Style: Modern interior design, high-quality architectural photography
+Requirements:
+- Professional lighting and shadows
+- Realistic textures and materials
+- Proper perspective and depth
+- Attention to detail in furniture and decor
+- Clean, well-composed shot
+- Transformation intensity: ${Math.round(strength * 100)}%`,
+        n: 1,
+        size: `${width}x${height}`,
+        quality: 'high',
+        response_format: 'b64_json'
+      };
+
+      const response = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[OpenAI] API error: ${response.status}`, errorText);
+        
+        if (response.status === 429) {
+          return { error: 'Rate limit exceeded', status: 429 };
+        }
+        
+        return { error: `OpenAI API error: ${response.status} - ${errorText}`, status: response.status };
       }
+
+      const data = await response.json();
+      const imageUrl = data.data?.[0]?.b64_json 
+        ? `data:image/png;base64,${data.data[0].b64_json}`
+        : data.data?.[0]?.url;
       
-      return { error: `OpenAI API error: ${response.status} - ${errorText}`, status: response.status };
-    }
+      if (!imageUrl) {
+        console.error(`[OpenAI] No image in response:`, data);
+        return { error: 'No image received from OpenAI' };
+      }
 
-    const data = await response.json();
-    const imageUrl = data.data?.[0]?.b64_json 
-      ? `data:image/png;base64,${data.data[0].b64_json}`
-      : data.data?.[0]?.url;
-    
-    if (!imageUrl) {
-      console.error(`[OpenAI] No image in response:`, data);
-      return { error: 'No image received from OpenAI' };
-    }
+      console.log(`[OpenAI] Generation succeeded`);
+      return { imageUrl };
+    } else {
+      // Text-to-image generation
+      const requestBody: any = {
+        model: model,
+        prompt: prompt,
+        n: 1,
+        size: `${width}x${height}`,
+        quality: 'high',
+        response_format: 'b64_json'
+      };
 
-    console.log(`[OpenAI] Generation succeeded`);
-    return { imageUrl };
+      const response = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[OpenAI] API error: ${response.status}`, errorText);
+        
+        if (response.status === 429) {
+          return { error: 'Rate limit exceeded', status: 429 };
+        }
+        
+        return { error: `OpenAI API error: ${response.status} - ${errorText}`, status: response.status };
+      }
+
+      const data = await response.json();
+      const imageUrl = data.data?.[0]?.b64_json 
+        ? `data:image/png;base64,${data.data[0].b64_json}`
+        : data.data?.[0]?.url;
+      
+      if (!imageUrl) {
+        console.error(`[OpenAI] No image in response:`, data);
+        return { error: 'No image received from OpenAI' };
+      }
+
+      console.log(`[OpenAI] Generation succeeded`);
+      return { imageUrl };
+    }
 
   } catch (error) {
     const err = error as Error;
