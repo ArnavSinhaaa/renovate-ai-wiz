@@ -10,7 +10,7 @@ const AI_PROVIDERS = {
   GOOGLE: {
     name: 'Google Gemini',
     endpoint: 'https://generativelanguage.googleapis.com/v1/models/',
-    models: ['gemini-1.5-flash', 'gemini-1.5-pro'],
+    models: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3-pro-preview'],
     keyName: 'GOOGLE_AI_KEY',
     freeLimit: 1500, // requests per day
     rateLimit: 15 // requests per minute
