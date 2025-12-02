@@ -283,8 +283,9 @@ async function analyzeWithGoogle(apiKey: string, model: string, prompt: string, 
           ]
         }],
         generationConfig: {
-          temperature: 0.3,
-          maxOutputTokens: 2000
+          temperature: 0.4,
+          maxOutputTokens: 8000,
+          responseMimeType: "application/json"
         }
       })
     });
