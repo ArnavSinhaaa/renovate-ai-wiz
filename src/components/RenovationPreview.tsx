@@ -25,8 +25,8 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
   roomType,
   budget,
   uploadedImage,
-  imageProvider = 'OPENAI',
-  imageModel = 'gpt-image-1',
+  imageProvider = 'LOVABLE',
+  imageModel = 'google/gemini-2.5-flash-image',
   providerStatus = {},
   onProviderStatusUpdate
 }) => {
@@ -79,9 +79,9 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
         : `Modernize this room with: ${Object.values(wallColors).map(w => w.name).join(', ')} wall colors, ${flooring.name} flooring, and ${tile.name} tiles.`;
       
       console.log('🎨 Generating room renovation preview with img2img...');
-      console.log('⚠️ Using OpenAI for image generation');
+      console.log(`Using ${imageProvider} for image generation`);
       toast.info('Generating renovation preview with AI', {
-        description: 'Using OpenAI gpt-image-1 for high-quality results',
+        description: `Using ${imageProvider === 'LOVABLE' ? 'Lovable AI (free)' : imageProvider} for results`,
         duration: 4000
       });
       
@@ -182,82 +182,110 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
   };
 
   return (
-    <Card className="shadow-soft">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Wand2 className="w-5 h-5 text-primary" />
-          AI Renovation Preview
+    <Card className="shadow-lg border-2 hover:shadow-glow transition-all duration-300 overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-primary/10 to-accent/10">
+        <CardTitle className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
+            <Wand2 className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <span className="text-xl">AI Renovation Preview</span>
+            <p className="text-sm text-muted-foreground font-normal">Powered by {imageProvider === 'LOVABLE' ? 'Lovable AI' : imageProvider}</p>
+          </div>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="p-6 space-y-6">
         {!generatedImage ? (
-          <div className="text-center space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-gradient-sage flex items-center justify-center">
-              <Sparkles className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h3 className="font-medium mb-2">Generate Your Dream Room</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                See how your selected renovations will look using AI
-              </p>
-              {selectedSuggestions.length > 0 && (
-                <div className="mb-4">
-                  <p className="text-sm font-medium mb-2">Will include:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedSuggestions.slice(0, 3).map((suggestion) => (
-                      <Badge key={suggestion.id} variant="outline" className="text-xs">
-                        {suggestion.suggestion}
-                      </Badge>
-                    ))}
-                    {selectedSuggestions.length > 3 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{selectedSuggestions.length - 3} more
-                      </Badge>
-                    )}
-                  </div>
+          <div className="text-center space-y-6 py-8">
+            <div className="relative">
+              <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                <div className="w-20 h-20 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow animate-pulse">
+                  <Sparkles className="w-10 h-10 text-white" />
                 </div>
-              )}
-              <Button 
-                onClick={generateRenovationImage}
-                disabled={isGenerating}
-                className="w-full"
-                variant="default"
-              >
-                {isGenerating ? (
-                  <>
-                    <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Wand2 className="w-4 h-4 mr-2" />
-                    Generate Preview
-                  </>
-                )}
-              </Button>
+              </div>
+              <div className="absolute -top-2 -right-2 w-8 h-8 bg-accent rounded-full flex items-center justify-center animate-bounce">
+                <span className="text-xs font-bold text-white">AI</span>
+              </div>
             </div>
+            <div className="space-y-3">
+              <h3 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                Generate Your Dream Room
+              </h3>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Transform your space with AI-powered visualization. See your renovations come to life instantly!
+              </p>
+            </div>
+            {selectedSuggestions.length > 0 && (
+              <div className="bg-muted/50 rounded-xl p-4 max-w-md mx-auto">
+                <p className="text-sm font-semibold mb-3 flex items-center justify-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  Selected Renovations
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {selectedSuggestions.slice(0, 3).map((suggestion) => (
+                    <Badge key={suggestion.id} variant="secondary" className="text-xs py-1.5 px-3">
+                      {suggestion.suggestion}
+                    </Badge>
+                  ))}
+                  {selectedSuggestions.length > 3 && (
+                    <Badge variant="outline" className="text-xs py-1.5 px-3">
+                      +{selectedSuggestions.length - 3} more
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+            <Button 
+              onClick={generateRenovationImage}
+              disabled={isGenerating || !uploadedImage}
+              size="lg"
+              className="w-full max-w-md bg-gradient-primary hover:opacity-90 text-white shadow-glow transition-all duration-300 hover:scale-[1.02]"
+            >
+              {isGenerating ? (
+                <>
+                  <Sparkles className="w-5 h-5 mr-2 animate-spin" />
+                  Creating Your Vision...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="w-5 h-5 mr-2" />
+                  Generate AI Preview
+                </>
+              )}
+            </Button>
+            {!uploadedImage && (
+              <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                Upload a room photo first to generate preview
+              </p>
+            )}
           </div>
         ) : (
-          <div className="space-y-4 animate-fade-in">
-            <ImageComparisonSlider
-              beforeImage={uploadedImage}
-              afterImage={generatedImage}
-              beforeLabel="Before"
-              afterLabel="After (AI Renovation)"
-            />
-            <div className="flex gap-2">
-              <Button onClick={downloadImage} variant="outline" className="flex-1">
-                <Download className="w-4 h-4 mr-2" />
-                Download After
+          <div className="space-y-6 animate-fade-in">
+            <div className="rounded-xl overflow-hidden shadow-lg border">
+              <ImageComparisonSlider
+                beforeImage={uploadedImage}
+                afterImage={generatedImage}
+                beforeLabel="Original"
+                afterLabel="AI Renovated"
+              />
+            </div>
+            <div className="flex gap-3">
+              <Button onClick={downloadImage} variant="outline" size="lg" className="flex-1 hover-lift">
+                <Download className="w-5 h-5 mr-2" />
+                Download Result
               </Button>
-              <Button onClick={() => setGeneratedImage(null)} variant="secondary" className="flex-1">
-                Generate New
+              <Button onClick={() => setGeneratedImage(null)} size="lg" className="flex-1 bg-gradient-primary hover:opacity-90">
+                <Sparkles className="w-5 h-5 mr-2" />
+                Regenerate
               </Button>
             </div>
             {generationPrompt && (
-              <p className="text-xs text-muted-foreground italic">
-                "{generationPrompt}"
-              </p>
+              <div className="bg-muted/50 rounded-lg p-4">
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-semibold">AI Prompt:</span> "{generationPrompt}"
+                </p>
+              </div>
             )}
           </div>
         )}
