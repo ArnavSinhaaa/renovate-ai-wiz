@@ -103,11 +103,11 @@ const Index = () => {
     error: userError
   } = useUserSession();
 
-  // AI Provider settings - Default to Google Gemini for analysis, Replicate for image generation
+  // AI Provider settings - Default to Google Gemini for analysis, Hugging Face for image generation
   const [analysisProvider, setAnalysisProvider] = useState('GOOGLE'); // Google Gemini for accurate object detection
   const [analysisModel, setAnalysisModel] = useState('gemini-2.5-flash');
-  const [imageProvider, setImageProvider] = useState('REPLICATE'); // Replicate for reliable image generation
-  const [imageModel, setImageModel] = useState('black-forest-labs/flux-schnell');
+  const [imageProvider, setImageProvider] = useState('HUGGINGFACE'); // Hugging Face for image generation
+  const [imageModel, setImageModel] = useState('black-forest-labs/FLUX.1-schnell');
   const [providerStatus, setProviderStatus] = useState<{ [key: string]: string }>({});
 
   /**
