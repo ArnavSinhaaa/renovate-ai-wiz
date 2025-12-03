@@ -25,8 +25,8 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
   roomType,
   budget,
   uploadedImage,
-  imageProvider = 'LOVABLE',
-  imageModel = 'google/gemini-2.5-flash-image-preview',
+  imageProvider = 'REPLICATE',
+  imageModel = 'black-forest-labs/flux-schnell',
   providerStatus = {},
   onProviderStatusUpdate
 }) => {
