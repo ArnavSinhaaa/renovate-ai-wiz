@@ -58,6 +58,7 @@ interface Props {
   falseCeiling?: FalseCeilingOption;
   onFalseCeilingChange?: (fc: FalseCeilingOption) => void;
   onMaterialCostsChange?: (costs: MaterialCosts) => void;
+  wallStatus?: { left: number; right: number; front: number };
 }
 
 const PRESET_COLORS: WallColor[] = [
@@ -106,7 +107,8 @@ export const WallColorCustomizer: React.FC<Props> = ({
   onTileChange,
   falseCeiling = { type: 'none', name: 'None', cost: 0 },
   onFalseCeilingChange,
-  onMaterialCostsChange
+  onMaterialCostsChange,
+  wallStatus = { left: 0, right: 0, front: 0 }
 }) => {
   const [selectedWall, setSelectedWall] = useState<WallSide>('front');
   const [customColor, setCustomColor] = useState<string>('#FFFFFF');
@@ -214,6 +216,7 @@ export const WallColorCustomizer: React.FC<Props> = ({
           right: wallColors.right.color,
           front: wallColors.front.color
         }}
+        wallStatus={wallStatus}
       />
 
       {/* Current Wall Info */}

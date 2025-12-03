@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Palette } from 'lucide-react';
 import { WallColorCustomizer, MaterialCosts, FalseCeilingOption } from './WallColorCustomizer';
@@ -22,13 +22,25 @@ export const WallCustomizationPanel: React.FC<WallCustomizationPanelProps> = ({
   const [flooring, setFlooring] = useState({ type: 'laminate', name: 'Laminate', cost: 200 });
   const [tile, setTile] = useState({ type: 'ceramic', name: 'Ceramic', cost: 300 });
 
+  // Calculate wall status (number of changes per wall)
+  const wallStatus = useMemo(() => ({
+    left: wallColors.left.name !== 'Pure White' ? 1 : 0,
+    right: wallColors.right.name !== 'Pure White' ? 1 : 0,
+    front: wallColors.front.name !== 'Pure White' ? 1 : 0,
+  }), [wallColors]);
+
   return (
-    <Card className="shadow-soft">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Palette className="w-5 h-5 text-primary" />
-          Wall & Material Customization
+    <Card className="shadow-md border-2 border-border/50">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Palette className="w-4 h-4 text-primary" />
+          </div>
+          <span>Wall & Material Customization</span>
         </CardTitle>
+        <p className="text-sm text-muted-foreground mt-1">
+          Pick colors and materials for each wall
+        </p>
       </CardHeader>
       <CardContent>
         <WallColorCustomizer
@@ -41,6 +53,7 @@ export const WallCustomizationPanel: React.FC<WallCustomizationPanelProps> = ({
           falseCeiling={falseCeiling}
           onFalseCeilingChange={onFalseCeilingChange}
           onMaterialCostsChange={onMaterialCostsChange}
+          wallStatus={wallStatus}
         />
       </CardContent>
     </Card>
