@@ -103,11 +103,11 @@ const Index = () => {
     error: userError
   } = useUserSession();
 
-  // AI Provider settings - Default to Google Gemini for best accuracy
+  // AI Provider settings - Default to Google Gemini for analysis, Lovable AI for image generation (free)
   const [analysisProvider, setAnalysisProvider] = useState('GOOGLE'); // Google Gemini for accurate object detection
   const [analysisModel, setAnalysisModel] = useState('gemini-2.5-flash');
-  const [imageProvider, setImageProvider] = useState('OPENAI'); // OpenAI for reliable image generation
-  const [imageModel, setImageModel] = useState('gpt-image-1');
+  const [imageProvider, setImageProvider] = useState('LOVABLE'); // Lovable AI for free image generation
+  const [imageModel, setImageModel] = useState('google/gemini-2.5-flash-image');
   const [providerStatus, setProviderStatus] = useState<{ [key: string]: string }>({});
 
   /**
