@@ -107,7 +107,7 @@ const Index = () => {
   const [analysisProvider, setAnalysisProvider] = useState('GOOGLE'); // Google Gemini for accurate object detection
   const [analysisModel, setAnalysisModel] = useState('gemini-2.5-flash');
   const [imageProvider, setImageProvider] = useState('LOVABLE'); // Lovable AI for free image generation
-  const [imageModel, setImageModel] = useState('google/gemini-2.5-flash-image');
+  const [imageModel, setImageModel] = useState('google/gemini-2.5-flash-image-preview');
   const [providerStatus, setProviderStatus] = useState<{ [key: string]: string }>({});
 
   /**
