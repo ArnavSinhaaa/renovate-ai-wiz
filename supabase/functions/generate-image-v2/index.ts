@@ -47,7 +47,7 @@ const IMAGE_PROVIDERS = {
   LOVABLE: {
     name: 'Lovable AI',
     endpoint: 'https://ai.gateway.lovable.dev/v1/chat/completions',
-    models: ['google/gemini-2.5-flash-image'],
+    models: ['google/gemini-2.5-flash-image-preview'],
     keyName: 'LOVABLE_API_KEY',
     freeLimit: 30, // requests per day
     rateLimit: 3, // requests per minute
