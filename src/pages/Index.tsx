@@ -147,7 +147,15 @@ const Index = () => {
       );
       
       setFilteredSuggestions(relevantSuggestions.length > 0 ? relevantSuggestions : suggestions.slice(0, 6));
-      toast.success(`Room analysis complete! Found ${relevantSuggestions.length} matching suggestions.`);
+      toast.success(`${relevantSuggestions.length || suggestions.slice(0, 6).length} suggestions ready`, {
+        description: 'Scroll down to view AI recommendations',
+        action: {
+          label: 'View',
+          onClick: () => {
+            document.getElementById('renovation-options')?.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      });
     }
   }, [budget, selectedRoom]);
 
@@ -290,10 +298,10 @@ const Index = () => {
         </div>
       </header>
       
-      {/* Step Progress Indicator */}
+      {/* Step Progress Indicator - Improved with check icons */}
       {currentStep > 1 && (
-        <div className="sticky top-[73px] z-40 bg-background/95 backdrop-blur-md border-b shadow-sm animate-slide-up">
-          <div className="container mx-auto px-4 py-6">
+        <div className="sticky top-[73px] z-40 bg-background/95 backdrop-blur-md border-b shadow-sm">
+          <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between max-w-3xl mx-auto">
               {steps.map((step, index) => {
                 const Icon = step.icon;
@@ -302,25 +310,35 @@ const Index = () => {
                 
                 return (
                   <React.Fragment key={step.number}>
-                    <div className="flex flex-col items-center gap-2 flex-1">
+                    <div className="flex flex-col items-center gap-1.5 flex-1">
                       <div className={`
-                        w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300
-                        ${isCompleted ? 'bg-gradient-primary text-white shadow-glow scale-110' : ''}
-                        ${isCurrent ? 'bg-primary text-white shadow-glow animate-pulse' : ''}
+                        w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300 relative
+                        ${isCompleted ? 'bg-primary/20 text-primary' : ''}
+                        ${isCurrent ? 'bg-primary text-white shadow-lg ring-4 ring-primary/20' : ''}
                         ${!isCompleted && !isCurrent ? 'bg-muted text-muted-foreground' : ''}
                       `}>
-                        <Icon className="w-5 h-5" />
+                        {isCompleted ? (
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <Icon className="w-5 h-5" />
+                        )}
                       </div>
                       <div className="text-center hidden md:block">
-                        <div className={`text-sm font-medium transition-colors ${isCurrent || isCompleted ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        <div className={`text-sm font-medium transition-colors ${
+                          isCurrent ? 'text-primary' : isCompleted ? 'text-foreground' : 'text-muted-foreground'
+                        }`}>
                           {step.title}
                         </div>
-                        <div className="text-xs text-muted-foreground">Step {step.number}</div>
+                        <div className={`text-xs ${isCompleted ? 'text-primary/70' : 'text-muted-foreground'}`}>
+                          {isCompleted ? 'Done' : `Step ${step.number}`}
+                        </div>
                       </div>
                     </div>
                     {index < steps.length - 1 && (
-                      <div className={`h-0.5 flex-1 transition-all duration-300 ${
-                        currentStep > step.number ? 'bg-gradient-primary' : 'bg-muted'
+                      <div className={`h-0.5 flex-1 mx-2 rounded-full transition-all duration-300 ${
+                        currentStep > step.number ? 'bg-primary' : 'bg-muted'
                       }`} />
                     )}
                   </React.Fragment>
@@ -501,21 +519,23 @@ const Index = () => {
           {currentStep >= 3 && filteredSuggestions.length > 0 && (
             <>
               {/* Wall Customization */}
-              <Card className="shadow-lg border-2 hover:shadow-glow transition-all duration-300 animate-slide-up">
-                <CardHeader>
+              <Card id="renovation-options" className="shadow-lg border-2 hover:shadow-xl transition-all duration-300 scroll-mt-32">
+                <CardHeader className="pb-4">
                   <CardTitle className="flex items-center gap-3 text-2xl">
-                    <div className="w-10 h-10 rounded-full bg-gradient-primary text-white flex items-center justify-center shadow-glow">
+                    <div className="w-10 h-10 rounded-full bg-gradient-primary text-white flex items-center justify-center shadow-md">
                       4
                     </div>
-                    <span>Choose Your Renovations</span>
+                    <div>
+                      <span className="block">Choose Your Renovations</span>
+                      <p className="text-sm font-normal text-muted-foreground mt-1">
+                        Pick an AI plan or customize each wall
+                      </p>
+                    </div>
                   </CardTitle>
-                  <p className="text-muted-foreground mt-2">
-                    Select renovation options from AI suggestions or customize your own
-                  </p>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Wall Customization Panel */}
-                  <WallCustomizationPanel 
+                  <WallCustomizationPanel
                     onMaterialCostsChange={setMaterialCosts}
                     falseCeiling={falseCeiling}
                     onFalseCeilingChange={setFalseCeiling}
@@ -526,9 +546,10 @@ const Index = () => {
 
                   {/* AI Suggestions */}
                   <div className="space-y-4">
-                    <h3 className="text-xl font-semibold flex items-center gap-2">
+                    <h3 className="text-xl font-bold flex items-center gap-2">
                       <Sparkles className="w-5 h-5 text-primary" />
-                      AI Suggested Renovations ({filteredSuggestions.length})
+                      AI Suggested Renovations
+                      <span className="text-sm font-normal text-muted-foreground ml-1">({filteredSuggestions.length} ready)</span>
                     </h3>
                     <div className="grid md:grid-cols-2 gap-6">
                       {filteredSuggestions.map(suggestion => (

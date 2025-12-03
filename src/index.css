@@ -269,6 +269,24 @@ All colors MUST be HSL.
     }
   }
   
+  /* Improved text readability */
+  .text-readable {
+    font-size: 1rem;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+  }
+  
+  /* Consistent card styling */
+  .card-modern {
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-soft);
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+  }
+  
+  .card-modern:hover {
+    box-shadow: var(--shadow-md);
+  }
+  
   /* Performance optimizations */
   img {
     content-visibility: auto;
@@ -283,5 +301,26 @@ All colors MUST be HSL.
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
+  }
+  
+  /* Focus states for accessibility */
+  *:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+  }
+  
+  /* Ensure minimum touch target size */
+  button, 
+  [role="button"],
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Exception for inline links */
+  p a, 
+  span a {
+    min-height: auto;
+    min-width: auto;
   }
 }
