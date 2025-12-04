@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { Home, Upload, Sparkles, Calculator, ShoppingBag } from 'lucide-react';
+import { Home, Upload, Sparkles, Calculator, ShoppingBag, Settings } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +21,7 @@ import { DonationSection } from '@/components/DonationSection';
 import { AdPlacement } from '@/components/AdPlacement';
 import { FixfyLogo } from '@/components/FixfyLogo';
 import { ImageHistory } from '@/components/ImageHistory';
+import { InlineModelSelector } from '@/components/InlineModelSelector';
 import { useAdManager } from '@/hooks/useAdManager';
 import { useUserSession } from '@/hooks/useUserSession';
 import { getFilteredSuggestions, RenovationSuggestion } from '@/data/renovationSuggestions';
@@ -432,7 +433,22 @@ const Index = () => {
                 Start by uploading a clear photo of the room you want to renovate
               </p>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              {/* AI Model Selector for Upload/Analysis */}
+              <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <Settings className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-muted-foreground">Analysis AI Model</span>
+                </div>
+                <InlineModelSelector
+                  type="analysis"
+                  selectedProvider={analysisProvider}
+                  selectedModel={analysisModel}
+                  onProviderChange={setAnalysisProvider}
+                  onModelChange={setAnalysisModel}
+                />
+              </div>
+              
               <ImageUpload 
                 onImageUpload={handleImageUpload} 
                 uploadedImage={uploadedImage} 
@@ -579,7 +595,22 @@ const Index = () => {
                           See how your renovated room will look with AI-generated visualization
                         </p>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="space-y-4">
+                        {/* AI Model Selector for Image Generation */}
+                        <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Settings className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm font-medium text-muted-foreground">Image Generation AI Model</span>
+                          </div>
+                          <InlineModelSelector
+                            type="image"
+                            selectedProvider={imageProvider}
+                            selectedModel={imageModel}
+                            onProviderChange={setImageProvider}
+                            onModelChange={setImageModel}
+                          />
+                        </div>
+                        
                         <RenovationPreview 
                           selectedSuggestions={cartItems} 
                           roomType={selectedRoom === 'all' ? undefined : selectedRoom} 
