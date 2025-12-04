@@ -38,6 +38,14 @@ const AI_PROVIDERS = {
     keyName: 'LOVABLE_API_KEY',
     freeLimit: 50, // requests per day
     rateLimit: 5 // requests per minute
+  },
+  DEEPSEEK: {
+    name: 'DeepSeek',
+    endpoint: 'https://api.deepseek.com/chat/completions',
+    models: ['deepseek-chat', 'deepseek-reasoner'],
+    keyName: 'DEEPSEEK_API_KEY',
+    freeLimit: 500, // requests per day
+    rateLimit: 20 // requests per minute
   }
 };
 
@@ -133,6 +141,8 @@ Provide 3-7 realistic objects with Indian pricing in Rupees. Make suggestions pr
       response = await analyzeWithOpenAI(apiKey, model, analysisPrompt, imageBase64);
     } else if (selectedProvider === 'LOVABLE') {
       response = await analyzeWithLovable(apiKey, model, analysisPrompt, imageBase64);
+    } else if (selectedProvider === 'DEEPSEEK') {
+      response = await analyzeWithDeepSeek(apiKey, model, analysisPrompt, imageBase64);
     } else {
       throw new Error(`Provider ${selectedProvider} not implemented yet`);
     }
@@ -447,5 +457,69 @@ async function analyzeWithLovable(apiKey: string, model: string, prompt: string,
     const err = error as Error;
     console.error(`[Lovable] Exception:`, error);
     return { error: `Lovable AI analysis failed: ${err.message}` };
+}
+
+async function analyzeWithDeepSeek(apiKey: string, model: string, prompt: string, imageBase64: string) {
+  console.log(`[DeepSeek] Starting analysis with model: ${model}`);
+  try {
+    // DeepSeek doesn't support vision directly, so we'll use a text-based approach
+    // with a description that the user provides context about the room
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert interior designer and home renovation consultant specializing in Indian homes. Analyze room descriptions and provide detailed renovation suggestions with realistic Indian market pricing.'
+          },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: prompt },
+              { 
+                type: 'image_url', 
+                image_url: { url: imageBase64 }
+              }
+            ]
+          }
+        ],
+        max_tokens: 2000,
+        temperature: 0.3
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[DeepSeek] API error: ${response.status}`, errorText);
+      return { error: `DeepSeek API error: ${response.status} - ${errorText}`, status: response.status };
+    }
+
+    const data = await response.json();
+    const content = data.choices[0]?.message?.content;
+    
+    if (!content) {
+      return { error: 'No content received from DeepSeek' };
+    }
+
+    // Clean and parse JSON response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return { error: 'No valid JSON found in response' };
+    }
+
+    const parsedData = JSON.parse(jsonMatch[0]);
+    console.log(`[DeepSeek] Analysis succeeded, found ${parsedData.detectedObjects?.length || 0} objects`);
+    return { data: parsedData };
+
+  } catch (error) {
+    const err = error as Error;
+    console.error(`[DeepSeek] Exception:`, error);
+    return { error: `DeepSeek analysis failed: ${err.message}` };
   }
+}
 }
