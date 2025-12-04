@@ -104,11 +104,11 @@ const Index = () => {
     error: userError
   } = useUserSession();
 
-  // AI Provider settings - Default to Google Gemini for analysis, Hugging Face for image generation
-  const [analysisProvider, setAnalysisProvider] = useState('GOOGLE'); // Google Gemini for accurate object detection
-  const [analysisModel, setAnalysisModel] = useState('gemini-2.5-flash');
-  const [imageProvider, setImageProvider] = useState('HUGGINGFACE'); // Hugging Face for image generation
-  const [imageModel, setImageModel] = useState('black-forest-labs/FLUX.1-schnell');
+  // AI Provider settings - simplified (model auto-selected based on provider)
+  const [analysisProvider, setAnalysisProvider] = useState('LOVABLE'); // Fixfy AI as default
+  const [analysisModel, setAnalysisModel] = useState('google/gemini-2.5-flash');
+  const [imageProvider, setImageProvider] = useState('LOVABLE'); // Fixfy AI as default
+  const [imageModel, setImageModel] = useState('google/gemini-2.5-flash-image-preview');
   const [providerStatus, setProviderStatus] = useState<{ [key: string]: string }>({});
 
   /**
@@ -557,8 +557,11 @@ const Index = () => {
                     onFalseCeilingChange={setFalseCeiling}
                   />
 
-                  {/* Custom Renovation Prompt */}
-                  <CustomRenovationPrompt onAddCustomRenovation={handleAddCustomRenovation} />
+                  {/* Custom Renovation Prompt with AI Analysis */}
+                  <CustomRenovationPrompt 
+                    onAddCustomRenovation={handleAddCustomRenovation}
+                    analysisProvider={analysisProvider}
+                  />
 
                   {/* AI Suggestions */}
                   <div className="space-y-4">

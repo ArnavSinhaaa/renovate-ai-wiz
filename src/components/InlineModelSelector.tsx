@@ -1,95 +1,123 @@
 import React from 'react';
-import { Cpu, Sparkles, Zap, Brain, Bot } from 'lucide-react';
+import { Cpu, Sparkles, Zap, Brain, Bot, Star, Clock, DollarSign, Award } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export interface AIOption {
   id: string;
   name: string;
   icon: React.ReactNode;
-  models: string[];
+  defaultModel: string;
   description: string;
   badge?: string;
+  ratings: {
+    cost: 1 | 2 | 3 | 4 | 5; // 1 = expensive, 5 = cheap
+    speed: 1 | 2 | 3 | 4 | 5; // 1 = slow, 5 = fast
+    quality: 1 | 2 | 3 | 4 | 5; // 1 = low, 5 = high
+  };
 }
 
 export const ANALYSIS_PROVIDERS: AIOption[] = [
   {
     id: 'LOVABLE',
-    name: 'Lovable AI',
-    icon: <Sparkles className="w-4 h-4 text-purple-500" />,
-    models: ['google/gemini-2.5-flash', 'google/gemini-2.5-pro'],
-    description: 'Built-in gateway',
-    badge: 'Recommended'
+    name: 'Fixfy AI',
+    icon: <Sparkles className="w-4 h-4 text-primary" />,
+    defaultModel: 'google/gemini-2.5-flash',
+    description: 'Our optimized model',
+    badge: 'Recommended',
+    ratings: { cost: 5, speed: 5, quality: 4 }
   },
   {
     id: 'GOOGLE',
     name: 'Google Gemini',
     icon: <Zap className="w-4 h-4 text-blue-500" />,
-    models: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3-pro-preview'],
-    description: 'Best for analysis'
+    defaultModel: 'gemini-2.5-flash',
+    description: 'Best for analysis',
+    ratings: { cost: 4, speed: 4, quality: 5 }
   },
   {
     id: 'DEEPSEEK',
     name: 'DeepSeek',
     icon: <Brain className="w-4 h-4 text-cyan-500" />,
-    models: ['deepseek-chat', 'deepseek-reasoner'],
+    defaultModel: 'deepseek-chat',
     description: 'Advanced reasoning',
-    badge: 'New'
+    badge: 'New',
+    ratings: { cost: 5, speed: 3, quality: 4 }
   },
   {
     id: 'OPENAI',
     name: 'OpenAI GPT-4',
     icon: <Bot className="w-4 h-4 text-green-500" />,
-    models: ['gpt-4o-mini', 'gpt-4o'],
-    description: 'Powerful vision'
+    defaultModel: 'gpt-4o-mini',
+    description: 'Powerful vision',
+    ratings: { cost: 2, speed: 3, quality: 5 }
   },
   {
     id: 'GROQ',
     name: 'Groq',
     icon: <Cpu className="w-4 h-4 text-orange-500" />,
-    models: ['llama-3.2-90b-vision-preview', 'llava-v1.5-7b-4096-preview'],
-    description: 'Fast inference'
+    defaultModel: 'llama-3.2-90b-vision-preview',
+    description: 'Fast inference',
+    ratings: { cost: 4, speed: 5, quality: 3 }
   }
 ];
 
 export const IMAGE_PROVIDERS: AIOption[] = [
   {
     id: 'LOVABLE',
-    name: 'Lovable AI',
-    icon: <Sparkles className="w-4 h-4 text-purple-500" />,
-    models: ['google/gemini-2.5-flash-image-preview'],
+    name: 'Fixfy AI',
+    icon: <Sparkles className="w-4 h-4 text-primary" />,
+    defaultModel: 'google/gemini-2.5-flash-image-preview',
     description: 'Image editing',
-    badge: 'Recommended'
+    badge: 'Recommended',
+    ratings: { cost: 5, speed: 4, quality: 4 }
   },
   {
     id: 'OPENAI',
     name: 'OpenAI',
     icon: <Bot className="w-4 h-4 text-green-500" />,
-    models: ['gpt-image-1', 'dall-e-3'],
-    description: 'High quality'
+    defaultModel: 'gpt-image-1',
+    description: 'High quality',
+    ratings: { cost: 1, speed: 2, quality: 5 }
   },
   {
     id: 'HUGGINGFACE',
     name: 'Hugging Face',
     icon: <Cpu className="w-4 h-4 text-yellow-500" />,
-    models: ['black-forest-labs/FLUX.1-schnell', 'black-forest-labs/FLUX.1-dev'],
-    description: 'Free FLUX models'
+    defaultModel: 'black-forest-labs/FLUX.1-schnell',
+    description: 'Free FLUX models',
+    ratings: { cost: 5, speed: 5, quality: 3 }
   },
   {
     id: 'REPLICATE',
     name: 'Replicate',
     icon: <Zap className="w-4 h-4 text-blue-500" />,
-    models: ['black-forest-labs/flux-schnell', 'stability-ai/sdxl'],
-    description: 'img2img support'
+    defaultModel: 'black-forest-labs/flux-schnell',
+    description: 'img2img support',
+    ratings: { cost: 3, speed: 3, quality: 4 }
   },
   {
     id: 'STABILITY',
     name: 'Stability AI',
     icon: <Brain className="w-4 h-4 text-indigo-500" />,
-    models: ['stable-diffusion-xl-1024-v1-0'],
-    description: 'Text-to-image'
+    defaultModel: 'stable-diffusion-xl-1024-v1-0',
+    description: 'Text-to-image',
+    ratings: { cost: 3, speed: 3, quality: 4 }
   }
 ];
+
+// Rating bar component
+const RatingBar: React.FC<{ value: number; max?: number; color: string }> = ({ value, max = 5, color }) => (
+  <div className="flex gap-0.5">
+    {Array.from({ length: max }).map((_, i) => (
+      <div
+        key={i}
+        className={`w-1.5 h-3 rounded-sm ${i < value ? color : 'bg-muted'}`}
+      />
+    ))}
+  </div>
+);
 
 interface InlineModelSelectorProps {
   type: 'analysis' | 'image';
@@ -104,7 +132,6 @@ interface InlineModelSelectorProps {
 export const InlineModelSelector: React.FC<InlineModelSelectorProps> = ({
   type,
   selectedProvider,
-  selectedModel,
   onProviderChange,
   onModelChange,
   compact = false,
@@ -116,8 +143,8 @@ export const InlineModelSelector: React.FC<InlineModelSelectorProps> = ({
   const handleProviderChange = (providerId: string) => {
     const provider = providers.find(p => p.id === providerId);
     onProviderChange(providerId);
-    if (provider && provider.models.length > 0) {
-      onModelChange(provider.models[0]);
+    if (provider) {
+      onModelChange(provider.defaultModel);
     }
   };
 
@@ -126,7 +153,7 @@ export const InlineModelSelector: React.FC<InlineModelSelectorProps> = ({
       <div className="flex items-center gap-2">
         {label && <span className="text-xs text-muted-foreground whitespace-nowrap">{label}:</span>}
         <Select value={selectedProvider} onValueChange={handleProviderChange}>
-          <SelectTrigger className="h-8 text-xs w-[130px] bg-background/50">
+          <SelectTrigger className="h-8 text-xs w-[140px] bg-background/50">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -150,49 +177,115 @@ export const InlineModelSelector: React.FC<InlineModelSelectorProps> = ({
   }
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3 p-3 bg-muted/30 rounded-lg border border-border/50">
-      <div className="flex-1 space-y-1.5">
+    <TooltipProvider>
+      <div className="space-y-3">
         {label && <label className="text-xs font-medium text-muted-foreground">{label}</label>}
+        
         <Select value={selectedProvider} onValueChange={handleProviderChange}>
-          <SelectTrigger className="h-9 bg-background">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {providers.map((provider) => (
-              <SelectItem key={provider.id} value={provider.id}>
-                <div className="flex items-center gap-2">
-                  {provider.icon}
-                  <div className="flex flex-col items-start">
-                    <span className="text-sm font-medium">{provider.name}</span>
-                    <span className="text-xs text-muted-foreground">{provider.description}</span>
+          <SelectTrigger className="h-auto py-3 bg-background">
+            <SelectValue>
+              {currentProvider && (
+                <div className="flex items-center gap-3">
+                  {currentProvider.icon}
+                  <div className="flex flex-col items-start text-left">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">{currentProvider.name}</span>
+                      {currentProvider.badge && (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                          {currentProvider.badge}
+                        </Badge>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground">{currentProvider.description}</span>
                   </div>
-                  {provider.badge && (
-                    <Badge variant="secondary" className="ml-auto text-[10px]">
-                      {provider.badge}
-                    </Badge>
-                  )}
+                </div>
+              )}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent className="w-[320px]">
+            {providers.map((provider) => (
+              <SelectItem key={provider.id} value={provider.id} className="py-3">
+                <div className="flex items-start gap-3 w-full">
+                  <div className="mt-0.5">{provider.icon}</div>
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">{provider.name}</span>
+                      {provider.badge && (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                          {provider.badge}
+                        </Badge>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground block">{provider.description}</span>
+                    
+                    {/* Ratings */}
+                    <div className="flex items-center gap-4 pt-1">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1.5">
+                            <DollarSign className="w-3 h-3 text-green-500" />
+                            <RatingBar value={provider.ratings.cost} color="bg-green-500" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          <p className="text-xs">Cost: {provider.ratings.cost === 5 ? 'Free/Very Cheap' : provider.ratings.cost >= 3 ? 'Affordable' : 'Expensive'}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1.5">
+                            <Clock className="w-3 h-3 text-blue-500" />
+                            <RatingBar value={provider.ratings.speed} color="bg-blue-500" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          <p className="text-xs">Speed: {provider.ratings.speed >= 4 ? 'Very Fast' : provider.ratings.speed >= 2 ? 'Moderate' : 'Slow'}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1.5">
+                            <Award className="w-3 h-3 text-amber-500" />
+                            <RatingBar value={provider.ratings.quality} color="bg-amber-500" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          <p className="text-xs">Quality: {provider.ratings.quality >= 4 ? 'Excellent' : provider.ratings.quality >= 2 ? 'Good' : 'Basic'}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
                 </div>
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-      </div>
 
-      <div className="flex-1 space-y-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Model</label>
-        <Select value={selectedModel} onValueChange={onModelChange}>
-          <SelectTrigger className="h-9 bg-background">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {currentProvider?.models.map((model) => (
-              <SelectItem key={model} value={model}>
-                <span className="text-sm">{model}</span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Current selection summary with ratings */}
+        {currentProvider && (
+          <div className="flex items-center justify-between px-3 py-2 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-4 text-xs">
+              <div className="flex items-center gap-1">
+                <DollarSign className="w-3 h-3 text-green-500" />
+                <span className="text-muted-foreground">Cost</span>
+                <RatingBar value={currentProvider.ratings.cost} color="bg-green-500" />
+              </div>
+              <div className="flex items-center gap-1">
+                <Clock className="w-3 h-3 text-blue-500" />
+                <span className="text-muted-foreground">Speed</span>
+                <RatingBar value={currentProvider.ratings.speed} color="bg-blue-500" />
+              </div>
+              <div className="flex items-center gap-1">
+                <Award className="w-3 h-3 text-amber-500" />
+                <span className="text-muted-foreground">Quality</span>
+                <RatingBar value={currentProvider.ratings.quality} color="bg-amber-500" />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </TooltipProvider>
   );
 };
