@@ -25,7 +25,7 @@ export const RenovationPreview: React.FC<RenovationPreviewProps> = ({
   roomType,
   budget,
   uploadedImage,
-  imageProvider = 'LOVABLE',
+  imageProvider = 'REPLICATE',
   imageModel = 'black-forest-labs/FLUX.1-schnell',
   providerStatus = {},
   onProviderStatusUpdate
