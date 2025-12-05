@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cpu, Sparkles, Zap, Brain, Bot, Star, Clock, DollarSign, Award } from 'lucide-react';
+import { Cpu, Sparkles, Zap, Brain, Bot, Clock, DollarSign, Award, ImageIcon, AlertTriangle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -11,10 +11,12 @@ export interface AIOption {
   defaultModel: string;
   description: string;
   badge?: string;
+  warning?: string;
   ratings: {
     cost: 1 | 2 | 3 | 4 | 5; // 1 = expensive, 5 = cheap
     speed: 1 | 2 | 3 | 4 | 5; // 1 = slow, 5 = fast
     quality: 1 | 2 | 3 | 4 | 5; // 1 = low, 5 = high
+    img2img?: 0 | 1 | 2 | 3 | 4 | 5; // 0 = none, 5 = excellent (only for image providers)
   };
 }
 
@@ -69,41 +71,45 @@ export const IMAGE_PROVIDERS: AIOption[] = [
     name: 'Fixfy AI',
     icon: <Sparkles className="w-4 h-4 text-primary" />,
     defaultModel: 'google/gemini-2.5-flash-image-preview',
-    description: 'Image editing',
-    badge: 'Recommended',
-    ratings: { cost: 5, speed: 4, quality: 4 }
+    description: 'Best for room editing',
+    badge: 'Free • Best',
+    ratings: { cost: 5, speed: 4, quality: 4, img2img: 5 }
   },
   {
     id: 'OPENAI',
     name: 'OpenAI',
     icon: <Bot className="w-4 h-4 text-green-500" />,
     defaultModel: 'gpt-image-1',
-    description: 'High quality',
-    ratings: { cost: 1, speed: 2, quality: 5 }
+    description: 'Highest quality',
+    badge: 'Premium',
+    ratings: { cost: 1, speed: 2, quality: 5, img2img: 4 }
   },
   {
     id: 'HUGGINGFACE',
     name: 'Hugging Face',
     icon: <Cpu className="w-4 h-4 text-yellow-500" />,
     defaultModel: 'black-forest-labs/FLUX.1-schnell',
-    description: 'Free FLUX models',
-    ratings: { cost: 5, speed: 5, quality: 3 }
+    description: 'Text-to-image only',
+    badge: 'Free',
+    warning: 'Limited room editing - better for generating new images',
+    ratings: { cost: 5, speed: 5, quality: 3, img2img: 2 }
   },
   {
     id: 'REPLICATE',
     name: 'Replicate',
     icon: <Zap className="w-4 h-4 text-blue-500" />,
     defaultModel: 'black-forest-labs/flux-schnell',
-    description: 'img2img support',
-    ratings: { cost: 3, speed: 3, quality: 4 }
+    description: 'Good img2img support',
+    ratings: { cost: 3, speed: 3, quality: 4, img2img: 4 }
   },
   {
     id: 'STABILITY',
     name: 'Stability AI',
     icon: <Brain className="w-4 h-4 text-indigo-500" />,
     defaultModel: 'stable-diffusion-xl-1024-v1-0',
-    description: 'Text-to-image',
-    ratings: { cost: 3, speed: 3, quality: 4 }
+    description: 'Text-to-image only',
+    warning: 'No room editing support',
+    ratings: { cost: 3, speed: 3, quality: 4, img2img: 0 }
   }
 ];
 
@@ -218,11 +224,19 @@ export const InlineModelSelector: React.FC<InlineModelSelectorProps> = ({
                     </div>
                     <span className="text-xs text-muted-foreground block">{provider.description}</span>
                     
+                    {/* Warning for limited providers */}
+                    {provider.warning && (
+                      <div className="flex items-center gap-1.5 text-amber-600 bg-amber-50 dark:bg-amber-950/30 rounded px-2 py-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        <span className="text-[10px]">{provider.warning}</span>
+                      </div>
+                    )}
+                    
                     {/* Ratings */}
-                    <div className="flex items-center gap-4 pt-1">
+                    <div className="flex items-center gap-3 pt-1">
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1">
                             <DollarSign className="w-3 h-3 text-green-500" />
                             <RatingBar value={provider.ratings.cost} color="bg-green-500" />
                           </div>
@@ -234,7 +248,7 @@ export const InlineModelSelector: React.FC<InlineModelSelectorProps> = ({
                       
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3 text-blue-500" />
                             <RatingBar value={provider.ratings.speed} color="bg-blue-500" />
                           </div>
@@ -246,7 +260,7 @@ export const InlineModelSelector: React.FC<InlineModelSelectorProps> = ({
                       
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1">
                             <Award className="w-3 h-3 text-amber-500" />
                             <RatingBar value={provider.ratings.quality} color="bg-amber-500" />
                           </div>
@@ -255,6 +269,21 @@ export const InlineModelSelector: React.FC<InlineModelSelectorProps> = ({
                           <p className="text-xs">Quality: {provider.ratings.quality >= 4 ? 'Excellent' : provider.ratings.quality >= 2 ? 'Good' : 'Basic'}</p>
                         </TooltipContent>
                       </Tooltip>
+                      
+                      {/* img2img rating for image providers */}
+                      {type === 'image' && provider.ratings.img2img !== undefined && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center gap-1">
+                              <ImageIcon className="w-3 h-3 text-purple-500" />
+                              <RatingBar value={provider.ratings.img2img} color="bg-purple-500" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            <p className="text-xs">Room Editing: {provider.ratings.img2img >= 4 ? 'Excellent' : provider.ratings.img2img >= 2 ? 'Limited' : 'Not Supported'}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -265,22 +294,39 @@ export const InlineModelSelector: React.FC<InlineModelSelectorProps> = ({
 
         {/* Current selection summary with ratings */}
         {currentProvider && (
-          <div className="flex items-center justify-between px-3 py-2 bg-muted/50 rounded-lg">
-            <div className="flex items-center gap-4 text-xs">
-              <div className="flex items-center gap-1">
-                <DollarSign className="w-3 h-3 text-green-500" />
-                <span className="text-muted-foreground">Cost</span>
-                <RatingBar value={currentProvider.ratings.cost} color="bg-green-500" />
+          <div className="space-y-2">
+            {/* Warning banner for limited img2img */}
+            {type === 'image' && currentProvider.warning && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <p className="text-xs text-amber-700 dark:text-amber-400">{currentProvider.warning}</p>
               </div>
-              <div className="flex items-center gap-1">
-                <Clock className="w-3 h-3 text-blue-500" />
-                <span className="text-muted-foreground">Speed</span>
-                <RatingBar value={currentProvider.ratings.speed} color="bg-blue-500" />
-              </div>
-              <div className="flex items-center gap-1">
-                <Award className="w-3 h-3 text-amber-500" />
-                <span className="text-muted-foreground">Quality</span>
-                <RatingBar value={currentProvider.ratings.quality} color="bg-amber-500" />
+            )}
+            
+            <div className="flex items-center justify-between px-3 py-2 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-4 text-xs flex-wrap">
+                <div className="flex items-center gap-1">
+                  <DollarSign className="w-3 h-3 text-green-500" />
+                  <span className="text-muted-foreground">Cost</span>
+                  <RatingBar value={currentProvider.ratings.cost} color="bg-green-500" />
+                </div>
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-blue-500" />
+                  <span className="text-muted-foreground">Speed</span>
+                  <RatingBar value={currentProvider.ratings.speed} color="bg-blue-500" />
+                </div>
+                <div className="flex items-center gap-1">
+                  <Award className="w-3 h-3 text-amber-500" />
+                  <span className="text-muted-foreground">Quality</span>
+                  <RatingBar value={currentProvider.ratings.quality} color="bg-amber-500" />
+                </div>
+                {type === 'image' && currentProvider.ratings.img2img !== undefined && (
+                  <div className="flex items-center gap-1">
+                    <ImageIcon className="w-3 h-3 text-purple-500" />
+                    <span className="text-muted-foreground">Edit</span>
+                    <RatingBar value={currentProvider.ratings.img2img} color="bg-purple-500" />
+                  </div>
+                )}
               </div>
             </div>
           </div>
