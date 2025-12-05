@@ -173,6 +173,22 @@ serve(async (req) => {
       response = await generateWithStability(actualApiKey, model, prompt, width, height);
     } else if (actualProvider === 'LOVABLE') {
       response = await generateWithLovable(actualApiKey, 'google/gemini-2.5-flash-image-preview', prompt, originalImage, strength);
+      
+      // Fallback: If Lovable AI fails (401/403), try HuggingFace
+      if (response.error && (response.status === 401 || response.status === 403)) {
+        console.log('[generate-image-v2] Lovable AI auth failed, falling back to HuggingFace...');
+        const hfKey = Deno.env.get('HUGGINGFACE_API_KEY');
+        if (hfKey) {
+          // For img2img, use SDXL which has better support
+          const hfModel = originalImage ? 'stabilityai/stable-diffusion-xl-base-1.0' : 'black-forest-labs/FLUX.1-schnell';
+          response = await generateWithHuggingFace(hfKey, hfModel, prompt, originalImage, strength);
+          if (!response.error) {
+            console.log('[generate-image-v2] Fallback to HuggingFace succeeded');
+          }
+        } else {
+          console.log('[generate-image-v2] No HUGGINGFACE_API_KEY for fallback');
+        }
+      }
     } else {
       throw new Error(`Provider ${actualProvider} not implemented yet`);
     }
