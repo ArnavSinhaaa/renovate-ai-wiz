@@ -67,12 +67,22 @@ export const ANALYSIS_PROVIDERS: AIOption[] = [
 
 export const IMAGE_PROVIDERS: AIOption[] = [
   {
+    id: 'REPLICATE',
+    name: 'Replicate',
+    icon: <Zap className="w-4 h-4 text-blue-500" />,
+    defaultModel: 'stability-ai/sdxl',
+    description: 'Best for room editing',
+    badge: 'Recommended',
+    ratings: { cost: 3, speed: 3, quality: 4, img2img: 5 }
+  },
+  {
     id: 'LOVABLE',
     name: 'Fixfy AI',
     icon: <Sparkles className="w-4 h-4 text-primary" />,
     defaultModel: 'google/gemini-2.5-flash-image-preview',
-    description: 'Best for room editing',
-    badge: 'Free • Best',
+    description: 'AI image editing',
+    badge: 'Free',
+    warning: 'Currently unavailable - use Replicate',
     ratings: { cost: 5, speed: 4, quality: 4, img2img: 5 }
   },
   {
@@ -91,16 +101,8 @@ export const IMAGE_PROVIDERS: AIOption[] = [
     defaultModel: 'black-forest-labs/FLUX.1-schnell',
     description: 'Text-to-image only',
     badge: 'Free',
-    warning: 'Limited room editing - better for generating new images',
-    ratings: { cost: 5, speed: 5, quality: 3, img2img: 2 }
-  },
-  {
-    id: 'REPLICATE',
-    name: 'Replicate',
-    icon: <Zap className="w-4 h-4 text-blue-500" />,
-    defaultModel: 'black-forest-labs/flux-schnell',
-    description: 'Good img2img support',
-    ratings: { cost: 3, speed: 3, quality: 4, img2img: 4 }
+    warning: 'Cannot edit rooms - generates new images only',
+    ratings: { cost: 5, speed: 5, quality: 3, img2img: 0 }
   },
   {
     id: 'STABILITY',
