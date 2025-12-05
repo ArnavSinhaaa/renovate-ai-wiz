@@ -137,18 +137,44 @@ serve(async (req) => {
     
     let response;
     
-    if (selectedProvider === 'OPENAI') {
-      response = await generateWithOpenAI(apiKey, model, prompt, originalImage, width, height, strength);
-    } else if (selectedProvider === 'REPLICATE') {
-      response = await generateWithReplicate(apiKey, model, prompt, originalImage, width, height, strength);
-    } else if (selectedProvider === 'HUGGINGFACE') {
-      response = await generateWithHuggingFace(apiKey, model, prompt, originalImage, strength);
-    } else if (selectedProvider === 'STABILITY') {
-      response = await generateWithStability(apiKey, model, prompt, width, height);
-    } else if (selectedProvider === 'LOVABLE') {
-      response = await generateWithLovable(apiKey, model, prompt, originalImage, strength);
+    // Auto-fallback: If HuggingFace is selected with an image, fall back to Lovable AI
+    // because HuggingFace FLUX models have limited img2img support
+    let actualProvider = selectedProvider;
+    let actualApiKey = apiKey;
+    
+    if (selectedProvider === 'HUGGINGFACE' && originalImage) {
+      const lovableKey = Deno.env.get('LOVABLE_API_KEY');
+      if (lovableKey) {
+        console.log('[generate-image-v2] Auto-fallback: HuggingFace has limited img2img, switching to Lovable AI');
+        actualProvider = 'LOVABLE';
+        actualApiKey = lovableKey;
+      } else {
+        console.log('[generate-image-v2] Warning: HuggingFace selected for img2img but LOVABLE_API_KEY not available for fallback');
+      }
+    }
+    
+    // Also fallback Stability AI for img2img since it doesn't support it
+    if (selectedProvider === 'STABILITY' && originalImage) {
+      const lovableKey = Deno.env.get('LOVABLE_API_KEY');
+      if (lovableKey) {
+        console.log('[generate-image-v2] Auto-fallback: Stability AI does not support img2img, switching to Lovable AI');
+        actualProvider = 'LOVABLE';
+        actualApiKey = lovableKey;
+      }
+    }
+    
+    if (actualProvider === 'OPENAI') {
+      response = await generateWithOpenAI(actualApiKey, model, prompt, originalImage, width, height, strength);
+    } else if (actualProvider === 'REPLICATE') {
+      response = await generateWithReplicate(actualApiKey, model, prompt, originalImage, width, height, strength);
+    } else if (actualProvider === 'HUGGINGFACE') {
+      response = await generateWithHuggingFace(actualApiKey, model, prompt, originalImage, strength);
+    } else if (actualProvider === 'STABILITY') {
+      response = await generateWithStability(actualApiKey, model, prompt, width, height);
+    } else if (actualProvider === 'LOVABLE') {
+      response = await generateWithLovable(actualApiKey, 'google/gemini-2.5-flash-image-preview', prompt, originalImage, strength);
     } else {
-      throw new Error(`Provider ${selectedProvider} not implemented yet`);
+      throw new Error(`Provider ${actualProvider} not implemented yet`);
     }
 
     if (response.error) {
