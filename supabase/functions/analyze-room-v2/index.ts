@@ -103,63 +103,18 @@ serve(async (req) => {
     const model = selectedModel || provider.models[0];
     console.log(`[analyze-room-v2] Using ${provider.name} with model: ${model}`);
     
-    const analysisPrompt = `Analyze this room image and identify objects that can be upgraded. For EACH detected object, provide 3 upgrade options: Budget (cheap), Standard (moderate), and Premium (expensive).
+    // Simplified prompt to get more compact JSON response
+    const analysisPrompt = `Analyze this room and identify 4-5 items that can be upgraded. For each, provide Budget, Standard, and Premium options.
 
-Return ONLY a valid JSON object in this exact format:
-{
-  "detectedObjects": [
-    {
-      "name": "object_name (e.g., Sofa, Lighting, Wall Paint, Flooring)",
-      "confidence": 0.95,
-      "location": "location_in_room",
-      "condition": "current_condition_assessment",
-      "upgrades": {
-        "budget": {
-          "title": "Budget upgrade title",
-          "description": "What this upgrade includes",
-          "cost": 5000,
-          "timelineDays": 1,
-          "impact": "Low",
-          "shoppingLinks": [
-            {"store": "Amazon", "url": "https://www.amazon.in/s?k=budget+item", "price": "₹3,000-5,000"},
-            {"store": "Flipkart", "url": "https://www.flipkart.com/search?q=budget+item", "price": "₹3,000-5,000"}
-          ]
-        },
-        "standard": {
-          "title": "Standard upgrade title",
-          "description": "What this upgrade includes",
-          "cost": 15000,
-          "timelineDays": 3,
-          "impact": "Medium",
-          "shoppingLinks": [
-            {"store": "Amazon", "url": "https://www.amazon.in/s?k=standard+item", "price": "₹12,000-18,000"},
-            {"store": "IKEA", "url": "https://www.ikea.com/in/en/search/?q=item", "price": "₹12,000-18,000"}
-          ]
-        },
-        "premium": {
-          "title": "Premium upgrade title",
-          "description": "What this upgrade includes",
-          "cost": 50000,
-          "timelineDays": 7,
-          "impact": "High",
-          "shoppingLinks": [
-            {"store": "Pepperfry", "url": "https://www.pepperfry.com/search?q=premium+item", "price": "₹40,000-60,000"},
-            {"store": "Urban Ladder", "url": "https://www.urbanladder.com/search?q=item", "price": "₹45,000-55,000"}
-          ]
-        }
-      }
-    }
-  ]
-}
+Return ONLY valid JSON:
+{"detectedObjects":[{"name":"Item Name","confidence":0.9,"location":"where in room","condition":"current state","upgrades":{"budget":{"title":"Budget option","description":"short desc","cost":5000,"timelineDays":1,"impact":"Low","shoppingLinks":[{"store":"Amazon","url":"https://amazon.in/s?k=item","price":"₹5000"}]},"standard":{"title":"Standard option","description":"short desc","cost":15000,"timelineDays":3,"impact":"Medium","shoppingLinks":[{"store":"IKEA","url":"https://ikea.com/in/search?q=item","price":"₹15000"}]},"premium":{"title":"Premium option","description":"short desc","cost":50000,"timelineDays":7,"impact":"High","shoppingLinks":[{"store":"Pepperfry","url":"https://pepperfry.com/search?q=item","price":"₹50000"}]}}}]}
 
-IMPORTANT:
-- Detect 4-8 objects/areas that can be upgraded (furniture, walls, flooring, lighting, decor, etc.)
-- ALL prices MUST be in Indian Rupees (₹)
-- Provide realistic pricing for Indian market
-- Budget options: ₹2,000-10,000
-- Standard options: ₹10,000-30,000  
-- Premium options: ₹30,000-100,000+
-- Include real shopping links from Amazon India, Flipkart, IKEA India, Pepperfry, Urban Ladder`;
+RULES:
+- Detect exactly 4-5 upgradeable items (walls, flooring, furniture, lighting, decor)
+- Keep descriptions under 15 words
+- Prices in INR: Budget ₹2K-10K, Standard ₹10K-30K, Premium ₹30K-100K
+- Only 1 shopping link per tier
+- Output ONLY the JSON, no explanation`;
 
     let response;
     
@@ -363,8 +318,35 @@ async function analyzeWithGoogle(apiKey: string, model: string, prompt: string, 
       console.log(`[Google] Analysis succeeded, found ${parsedData.detectedObjects?.length || 0} objects`);
       return { data: parsedData };
     } catch (parseError) {
-      console.error('[Google] JSON parse error:', parseError, 'Content:', jsonMatch[0].substring(0, 200));
-      return { error: `Failed to parse JSON: ${parseError.message}` };
+      // Try to repair truncated JSON
+      console.log('[Google] Attempting JSON repair...');
+      let repaired = jsonMatch[0];
+      
+      // Count open/close brackets and braces
+      const openBraces = (repaired.match(/\{/g) || []).length;
+      const closeBraces = (repaired.match(/\}/g) || []).length;
+      const openBrackets = (repaired.match(/\[/g) || []).length;
+      const closeBrackets = (repaired.match(/\]/g) || []).length;
+      
+      // Add missing closing brackets/braces
+      for (let i = 0; i < openBrackets - closeBrackets; i++) repaired += ']';
+      for (let i = 0; i < openBraces - closeBraces; i++) repaired += '}';
+      
+      // Try to find a valid cutoff point
+      const lastCompleteObject = repaired.lastIndexOf('}]}}}');
+      if (lastCompleteObject > 0) {
+        repaired = repaired.substring(0, lastCompleteObject + 5) + ']}';
+      }
+      
+      try {
+        const repairedData = JSON.parse(repaired);
+        console.log(`[Google] JSON repair succeeded, found ${repairedData.detectedObjects?.length || 0} objects`);
+        return { data: repairedData };
+      } catch (repairError) {
+        console.error('[Google] JSON repair failed:', repairError);
+        console.error('[Google] Original content:', jsonMatch[0].substring(0, 500));
+        return { error: `Failed to parse JSON: ${parseError.message}` };
+      }
     }
 
   } catch (error) {
