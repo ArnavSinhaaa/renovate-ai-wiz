@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { ImageUpload } from '@/components/ImageUpload';
 import { ObjectDetection } from '@/components/ObjectDetection';
 import { RoomTipsGuide } from '@/components/RoomTipsGuide';
+import { ThemeMoodBoard } from '@/components/ThemeMoodBoard';
 import { DonationSection } from '@/components/DonationSection';
 import { AdPlacement } from '@/components/AdPlacement';
 import { InlineModelSelector } from '@/components/InlineModelSelector';
@@ -383,6 +384,11 @@ const Index = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+                
+                {/* Theme Mood Board */}
+                <div className="md:col-span-2 mt-4">
+                  <ThemeMoodBoard selectedTheme={roomTheme} />
                 </div>
               </CardContent>
             </Card>
