@@ -103,33 +103,63 @@ serve(async (req) => {
     const model = selectedModel || provider.models[0];
     console.log(`[analyze-room-v2] Using ${provider.name} with model: ${model}`);
     
-    const analysisPrompt = `Analyze this room image and provide a detailed JSON response with detected objects and renovation suggestions. Focus on identifying furniture, lighting, flooring, walls, and potential improvements.
+    const analysisPrompt = `Analyze this room image and identify objects that can be upgraded. For EACH detected object, provide 3 upgrade options: Budget (cheap), Standard (moderate), and Premium (expensive).
 
 Return ONLY a valid JSON object in this exact format:
 {
   "detectedObjects": [
     {
-      "name": "object_name",
+      "name": "object_name (e.g., Sofa, Lighting, Wall Paint, Flooring)",
       "confidence": 0.95,
       "location": "location_in_room",
-      "projectTitle": "specific_renovation_project",
-      "roomArea": "area_type",
-      "projectType": "DIY|Professional",
-      "issueSolved": "what_problem_this_solves",
-      "estimatedCost": 15000,
-      "timelineDays": 3,
-      "shoppingLinks": [
-        {
-          "store": "store_name",
-          "url": "product_url",
-          "price": "₹X,XXX"
+      "condition": "current_condition_assessment",
+      "upgrades": {
+        "budget": {
+          "title": "Budget upgrade title",
+          "description": "What this upgrade includes",
+          "cost": 5000,
+          "timelineDays": 1,
+          "impact": "Low",
+          "shoppingLinks": [
+            {"store": "Amazon", "url": "https://www.amazon.in/s?k=budget+item", "price": "₹3,000-5,000"},
+            {"store": "Flipkart", "url": "https://www.flipkart.com/search?q=budget+item", "price": "₹3,000-5,000"}
+          ]
+        },
+        "standard": {
+          "title": "Standard upgrade title",
+          "description": "What this upgrade includes",
+          "cost": 15000,
+          "timelineDays": 3,
+          "impact": "Medium",
+          "shoppingLinks": [
+            {"store": "Amazon", "url": "https://www.amazon.in/s?k=standard+item", "price": "₹12,000-18,000"},
+            {"store": "IKEA", "url": "https://www.ikea.com/in/en/search/?q=item", "price": "₹12,000-18,000"}
+          ]
+        },
+        "premium": {
+          "title": "Premium upgrade title",
+          "description": "What this upgrade includes",
+          "cost": 50000,
+          "timelineDays": 7,
+          "impact": "High",
+          "shoppingLinks": [
+            {"store": "Pepperfry", "url": "https://www.pepperfry.com/search?q=premium+item", "price": "₹40,000-60,000"},
+            {"store": "Urban Ladder", "url": "https://www.urbanladder.com/search?q=item", "price": "₹45,000-55,000"}
+          ]
         }
-      ]
+      }
     }
   ]
 }
 
-Provide 3-7 realistic objects with Indian pricing in Rupees. Make suggestions practical and cost-effective.`;
+IMPORTANT:
+- Detect 4-8 objects/areas that can be upgraded (furniture, walls, flooring, lighting, decor, etc.)
+- ALL prices MUST be in Indian Rupees (₹)
+- Provide realistic pricing for Indian market
+- Budget options: ₹2,000-10,000
+- Standard options: ₹10,000-30,000  
+- Premium options: ₹30,000-100,000+
+- Include real shopping links from Amazon India, Flipkart, IKEA India, Pepperfry, Urban Ladder`;
 
     let response;
     
