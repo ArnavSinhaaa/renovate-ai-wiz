@@ -29,7 +29,7 @@ import { MaterialCosts, FalseCeilingOption } from '@/components/WallColorCustomi
 import { WallCustomizationPanel } from '@/components/WallCustomizationPanel';
 import { CustomRenovationPrompt } from '@/components/CustomRenovationPrompt';
 import { toast } from 'sonner';
-import heroImage from '@/assets/hero-renovation.jpg';
+// Hero image is in public folder for LCP optimization (discoverable in initial HTML)
 
 /**
  * Interface for objects detected by AI analysis
@@ -358,7 +358,7 @@ const Index = () => {
         {/* Background image with gradient overlays for visual appeal */}
         <div className="absolute inset-0">
           <img 
-            src={heroImage} 
+            src="/hero-renovation.jpg" 
             alt="Beautiful home renovation transformation" 
             className="w-full h-full object-cover" 
             width={1920}
