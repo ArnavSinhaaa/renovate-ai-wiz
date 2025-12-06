@@ -357,7 +357,15 @@ const Index = () => {
       <section className="relative overflow-hidden min-h-[600px]">
         {/* Background image with gradient overlays for visual appeal */}
         <div className="absolute inset-0">
-          <img src={heroImage} alt="Beautiful home renovation transformation" className="w-full h-full object-cover" loading="lazy" />
+          <img 
+            src={heroImage} 
+            alt="Beautiful home renovation transformation" 
+            className="w-full h-full object-cover" 
+            width={1920}
+            height={1017}
+            fetchPriority="high"
+            decoding="async"
+          />
           {/* Primary gradient overlay for text readability */}
           <div className="absolute inset-0 bg-gradient-to-br from-purple-900/90 via-indigo-900/80 to-background/95" />
           {/* Secondary radial gradient for depth */}
