@@ -1,6 +1,7 @@
 /**
  * Main Index page component for the AI Home Renovation application
  * Simplified approach: AI analysis provides upgrade options (Budget/Standard/Premium) directly
+ * Last updated: 2025-12-06
  */
 
 import React, { useState, useCallback } from 'react';
