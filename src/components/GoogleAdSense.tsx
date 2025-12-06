@@ -1,9 +1,10 @@
 /**
  * Google AdSense integration component
  * Handles Google AdSense ad loading and display
+ * Deferred loading to improve initial page performance
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface GoogleAdSenseProps {
   /** Ad unit ID from Google AdSense */
@@ -22,6 +23,7 @@ interface GoogleAdSenseProps {
 
 /**
  * Google AdSense component for displaying Google ads
+ * Uses deferred loading to avoid blocking initial render
  * @param props - Component props
  * @returns JSX element containing the Google AdSense ad
  */
@@ -34,8 +36,25 @@ export const GoogleAdSense: React.FC<GoogleAdSenseProps> = ({
   responsive = true
 }) => {
   const adRef = useRef<HTMLModElement>(null);
+  const [shouldLoad, setShouldLoad] = useState(false);
+
+  // Defer loading until after initial render and user interaction
+  useEffect(() => {
+    // Use requestIdleCallback for non-blocking load, fallback to setTimeout
+    const loadAds = () => setShouldLoad(true);
+    
+    if ('requestIdleCallback' in window) {
+      const id = (window as any).requestIdleCallback(loadAds, { timeout: 3000 });
+      return () => (window as any).cancelIdleCallback(id);
+    } else {
+      const timeout = setTimeout(loadAds, 2000);
+      return () => clearTimeout(timeout);
+    }
+  }, []);
 
   useEffect(() => {
+    if (!shouldLoad) return;
+
     // Load Google AdSense script if not already loaded
     if (typeof window !== 'undefined' && !(window as any).adsbygoogle) {
       const script = document.createElement('script');
@@ -45,15 +64,42 @@ export const GoogleAdSense: React.FC<GoogleAdSenseProps> = ({
       document.head.appendChild(script);
     }
 
-    // Initialize ad when component mounts
-    if (adRef.current && (window as any).adsbygoogle) {
-      try {
-        ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
-      } catch (error) {
-        console.warn('AdSense error:', error);
+    // Initialize ad when script is ready
+    const initAd = () => {
+      if (adRef.current && (window as any).adsbygoogle) {
+        try {
+          ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+        } catch (error) {
+          console.warn('AdSense error:', error);
+        }
       }
-    }
-  }, [adUnitId]);
+    };
+
+    // Wait for script to load before initializing
+    const checkScript = setInterval(() => {
+      if ((window as any).adsbygoogle) {
+        initAd();
+        clearInterval(checkScript);
+      }
+    }, 100);
+
+    // Cleanup after 5 seconds
+    const timeout = setTimeout(() => clearInterval(checkScript), 5000);
+
+    return () => {
+      clearInterval(checkScript);
+      clearTimeout(timeout);
+    };
+  }, [shouldLoad, adUnitId]);
+
+  // Don't render until ready to load
+  if (!shouldLoad) {
+    return (
+      <div className={`adsense-container ${className}`}>
+        <div className="bg-muted/30 animate-pulse rounded" style={{ minHeight: '90px' }} />
+      </div>
+    );
+  }
 
   return (
     <div className={`adsense-container ${className}`}>
