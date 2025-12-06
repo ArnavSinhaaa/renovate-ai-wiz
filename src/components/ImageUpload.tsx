@@ -23,6 +23,7 @@ interface ImageUploadProps {
   isAnalyzing: boolean;
   onAnalysisComplete: (objects: any[]) => void;
   currentImageId?: string;
+  roomTheme?: string;
 }
 
 /**
@@ -34,7 +35,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   onRemoveImage,
   isAnalyzing,
   onAnalysisComplete,
-  currentImageId
+  currentImageId,
+  roomTheme = 'general'
 }) => {
   // State management
   const [isDragOver, setIsDragOver] = useState(false);
@@ -75,7 +77,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         body: { 
           imageBase64: base64Data, 
           selectedProvider: 'GOOGLE',
-          selectedModel: 'gemini-2.5-flash'
+          selectedModel: 'gemini-2.5-flash',
+          roomTheme: roomTheme
         }
       });
 

@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { Home, Upload, Sparkles, Calculator, Settings, IndianRupee, Trash2 } from 'lucide-react';
+import { Home, Upload, Sparkles, Calculator, Settings, IndianRupee, Trash2, Lightbulb, CheckCircle2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { ImageUpload } from '@/components/ImageUpload';
 import { ObjectDetection } from '@/components/ObjectDetection';
+import { RoomTipsGuide } from '@/components/RoomTipsGuide';
 import { DonationSection } from '@/components/DonationSection';
 import { AdPlacement } from '@/components/AdPlacement';
 import { InlineModelSelector } from '@/components/InlineModelSelector';
@@ -58,9 +59,10 @@ const Index = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [detectedObjects, setDetectedObjects] = useState<DetectedObject[]>([]);
 
-  // State for budget
+  // State for budget and theme
   const [budget, setBudget] = useState<number>(100000);
   const [selectedRoom, setSelectedRoom] = useState<string>('all');
+  const [roomTheme, setRoomTheme] = useState<string>('general');
 
   // State for selected upgrades (cart)
   const [selectedUpgrades, setSelectedUpgrades] = useState<SelectedUpgrade[]>([]);
@@ -316,6 +318,7 @@ const Index = () => {
                 onRemoveImage={handleRemoveImage} 
                 isAnalyzing={isAnalyzing} 
                 onAnalysisComplete={handleAnalysisComplete}
+                roomTheme={roomTheme}
               />
             </CardContent>
           </Card>
@@ -361,6 +364,25 @@ const Index = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  
+                  <div className="space-y-3 md:col-span-2">
+                    <Label htmlFor="theme" className="text-base font-semibold">Room Theme / Style</Label>
+                    <Select value={roomTheme} onValueChange={setRoomTheme}>
+                      <SelectTrigger className="h-12 text-lg bg-background">
+                        <SelectValue placeholder="Select a theme" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        <SelectItem value="general">🏠 General / Modern</SelectItem>
+                        <SelectItem value="girls">🎀 Girls Room (Pink, Soft, Elegant)</SelectItem>
+                        <SelectItem value="boys">🚀 Boys Room (Adventure, Sports, Tech)</SelectItem>
+                        <SelectItem value="coder">💻 Coder / Tech Room (Dark, RGB, Minimal)</SelectItem>
+                        <SelectItem value="gamer">🎮 Gamer Room (Neon, Gaming Setup)</SelectItem>
+                        <SelectItem value="minimalist">🪴 Minimalist (Clean, Zen, Natural)</SelectItem>
+                        <SelectItem value="bohemian">🌸 Bohemian (Colorful, Artistic, Cozy)</SelectItem>
+                        <SelectItem value="luxury">👑 Luxury (Premium, Gold, Marble)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -393,6 +415,9 @@ const Index = () => {
                     />
                   </CardContent>
                 </Card>
+                
+                {/* Tips and Guide Section */}
+                <RoomTipsGuide theme={roomTheme} detectedObjects={detectedObjects} />
               </div>
 
               {/* Right: Budget Summary */}

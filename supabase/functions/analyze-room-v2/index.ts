@@ -55,11 +55,12 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64, selectedProvider = 'LOVABLE', selectedModel } = await req.json();
+    const { imageBase64, selectedProvider = 'LOVABLE', selectedModel, roomTheme = 'general' } = await req.json();
     
     console.log(`[analyze-room-v2] Request received:`, {
       provider: selectedProvider,
       model: selectedModel,
+      theme: roomTheme,
       hasImage: !!imageBase64,
       imageSize: imageBase64?.length
     });
@@ -103,18 +104,32 @@ serve(async (req) => {
     const model = selectedModel || provider.models[0];
     console.log(`[analyze-room-v2] Using ${provider.name} with model: ${model}`);
     
+    // Theme-specific style guidelines
+    const themeGuidelines: Record<string, string> = {
+      general: 'Modern, neutral aesthetics with clean lines',
+      girls: 'Pink, lavender, rose gold, soft pastels, elegant feminine touches',
+      boys: 'Navy blue, gray, sports/adventure themes, durable materials',
+      coder: 'Dark theme, RGB lighting, ergonomic, cable management, tech-focused',
+      gamer: 'RGB/neon colors, gaming aesthetics, acoustic panels, blackout setup',
+      minimalist: 'White/beige, minimal items, clean lines, zen vibes, quality over quantity',
+      bohemian: 'Earth tones, layered textiles, plants, vintage finds, mixed patterns',
+      luxury: 'Deep jewel tones, gold/brass accents, marble, velvet, statement pieces'
+    };
+    
+    const themeStyle = themeGuidelines[roomTheme] || themeGuidelines.general;
+    
     // Simplified prompt to get more compact JSON response
-    const analysisPrompt = `Analyze this room and identify 4-5 items that can be upgraded. For each, provide Budget, Standard, and Premium options.
+    const analysisPrompt = `Analyze this room and identify 4-5 items that can be upgraded. Theme: ${roomTheme.toUpperCase()} (${themeStyle}).
 
 Return ONLY valid JSON:
-{"detectedObjects":[{"name":"Item Name","confidence":0.9,"location":"where in room","condition":"current state","upgrades":{"budget":{"title":"Budget option","description":"short desc","cost":5000,"timelineDays":1,"impact":"Low","shoppingLinks":[{"store":"Amazon","url":"https://amazon.in/s?k=item","price":"₹5000"}]},"standard":{"title":"Standard option","description":"short desc","cost":15000,"timelineDays":3,"impact":"Medium","shoppingLinks":[{"store":"IKEA","url":"https://ikea.com/in/search?q=item","price":"₹15000"}]},"premium":{"title":"Premium option","description":"short desc","cost":50000,"timelineDays":7,"impact":"High","shoppingLinks":[{"store":"Pepperfry","url":"https://pepperfry.com/search?q=item","price":"₹50000"}]}}}]}
+{"detectedObjects":[{"name":"Item Name","confidence":0.9,"location":"where in room","condition":"current state","upgrades":{"budget":{"title":"Budget ${roomTheme} style option","description":"short desc matching ${roomTheme} theme","cost":5000,"timelineDays":1,"impact":"Low","shoppingLinks":[{"store":"Amazon","url":"https://amazon.in/s?k=item","price":"₹5000"}]},"standard":{"title":"Standard ${roomTheme} option","description":"themed upgrade","cost":15000,"timelineDays":3,"impact":"Medium","shoppingLinks":[{"store":"IKEA","url":"https://ikea.com/in/search?q=item","price":"₹15000"}]},"premium":{"title":"Premium ${roomTheme} option","description":"luxury themed upgrade","cost":50000,"timelineDays":7,"impact":"High","shoppingLinks":[{"store":"Pepperfry","url":"https://pepperfry.com/search?q=item","price":"₹50000"}]}}}]}
 
-RULES:
-- Detect exactly 4-5 upgradeable items (walls, flooring, furniture, lighting, decor)
-- Keep descriptions under 15 words
+THEME RULES for "${roomTheme}": ${themeStyle}
+- All upgrade suggestions MUST match the ${roomTheme} aesthetic
+- Use theme-appropriate colors, materials, and styles
 - Prices in INR: Budget ₹2K-10K, Standard ₹10K-30K, Premium ₹30K-100K
 - Only 1 shopping link per tier
-- Output ONLY the JSON, no explanation`;
+- Output ONLY JSON, no explanation`;
 
     let response;
     
